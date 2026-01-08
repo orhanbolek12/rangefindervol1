@@ -1,0 +1,511 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spread Finder</title>
+    <style>
+        :root {
+            --bg-color: #0f172a;
+            --card-bg: #1e293b;
+            --accent: #3b82f6;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --success: #10b981;
+        }
+
+        body {
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 900px;
+            padding: 2rem;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 3rem;
+            padding-top: 2rem;
+        }
+
+        h1 {
+            font-size: 3rem;
+            font-weight: 800;
+            background: linear-gradient(to right, #60a5fa, #a78bfa);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin: 0;
+        }
+
+        .card {
+            background-color: var(--card-bg);
+            border-radius: 1rem;
+            padding: 2rem;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            margin-bottom: 2rem;
+        }
+
+        textarea {
+            width: 100%;
+            height: 150px;
+            background-color: #0f172a;
+            border: 1px solid #334155;
+            color: var(--text-main);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            font-family: monospace;
+            resize: vertical;
+            font-size: 0.9rem;
+            box-sizing: border-box;
+            /* Important for padding */
+        }
+
+        textarea:focus {
+            outline: 2px solid var(--accent);
+            border-color: transparent;
+        }
+
+        .btn {
+            display: block;
+            width: 100%;
+            background: linear-gradient(135deg, var(--accent), #2563eb);
+            color: white;
+            padding: 1rem;
+            border: none;
+            border-radius: 0.5rem;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 1rem;
+            transition: transform 0.1s, opacity 0.2s;
+        }
+
+        .btn:hover {
+            opacity: 0.9;
+            transform: translateY(-1px);
+        }
+
+        .btn:disabled {
+            background: #475569;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* Progress Bar */
+        .progress-container {
+            margin-top: 2rem;
+            display: none;
+        }
+
+        .progress-label {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 0.5rem;
+            color: var(--text-muted);
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background-color: #334155;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background-color: var(--success);
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+
+        /* Results Table */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1rem;
+        }
+
+        th,
+        td {
+            padding: 1rem;
+            text-align: left;
+            border-bottom: 1px solid #334155;
+        }
+
+        th {
+            color: var(--text-muted);
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.8rem;
+            letter-spacing: 0.05em;
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        .spread-badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            background-color: rgba(16, 185, 129, 0.2);
+            color: var(--success);
+            border-radius: 1rem;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        a.tv-link {
+            color: var(--accent);
+            text-decoration: none;
+        }
+
+        a.tv-link:hover {
+            text-decoration: underline;
+        }
+
+        .tabs {
+            margin-bottom: 2rem;
+            display: flex;
+            gap: 1rem;
+        }
+
+        .tab-btn {
+            background-color: var(--card-bg);
+            color: var(--text-muted);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            padding: 1rem 2rem;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            font-size: 1.1rem;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+
+        .tab-btn.active {
+            background: linear-gradient(135deg, var(--accent), #2563eb);
+            color: white;
+            border-color: transparent;
+        }
+
+        .tab-btn:hover:not(.active) {
+            background-color: #334155;
+            color: var(--text-main);
+        }
+
+        .tabs {
+            margin-bottom: 2rem;
+            display: flex;
+            gap: 1rem;
+        }
+
+        .tab-btn {
+            background-color: var(--card-bg);
+            color: var(--text-muted);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            padding: 1rem 2rem;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            font-size: 1.1rem;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+
+        .tab-btn.active {
+            background: linear-gradient(135deg, var(--accent), #2563eb);
+            color: white;
+            border-color: transparent;
+        }
+
+        .tab-btn:hover:not(.active) {
+            background-color: #334155;
+            color: var(--text-main);
+        }
+
+        .empty-state {
+            text-align: center;
+            color: var(--text-muted);
+            padding: 2rem;
+            font-style: italic;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container">
+        <header>
+            <h1>Spread Finder</h1>
+            <p style="color: var(--text-muted);">Find low volatility dividend stocks (Max - Min &le; 1.02)</p>
+        </header>
+
+        <div class="tabs">
+            <button class="tab-btn active" onclick="switchTab('custom')">Custom Search</button>
+            <button class="tab-btn" onclick="switchTab('prefs')">Saved Prefs</button>
+        </div>
+
+        <!-- Custom Search Section -->
+        <div id="customSection" class="card">
+            <label for="tickers" style="display:block; margin-bottom: 0.5rem; font-weight:600;">Enter Tickers (ABR-D,
+                PCG-G...)</label>
+            <textarea id="tickers" placeholder="Paste your list here...
+ABR-D
+PCG-G
+JBK
+..."></textarea>
+            <button id="analyzeBtn" class="btn" onclick="startAnalysis()">Analyze Tickers</button>
+
+            <div class="progress-container" id="progressContainer">
+                <div class="progress-label">
+                    <span id="progressText">Processing...</span>
+                    <span id="progressPercent">0%</span>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Prefs Section -->
+        <div id="prefsSection" class="card" style="display:none;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+                <div>
+                    <h2 style="margin:0; font-size:1.5rem;">Saved Watchlist</h2>
+                    <small id="prefsStatus" style="color:var(--text-muted)">Loading status...</small>
+                </div>
+                <button class="btn" onclick="refreshPrefs()"
+                    style="width:auto; padding:0.5rem 1rem; font-size:0.9rem;">Refresh List</button>
+            </div>
+            <p style="color:var(--text-muted); margin-bottom:1rem;">
+                This list is continuously analyzed against valid criteria (90d, Spread &ge; 0.10, Range &le; 1.00).
+            </p>
+        </div>
+
+        <div class="card" id="resultsCard" style="display:none;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+                <h2 style="margin:0;">Results</h2>
+                <div id="foundLabel" style="color:var(--success); font-weight:600; display:none;">
+                    <span id="matchCount">0</span> Tickers Found
+                    <button class="btn" onclick="copyToClipboard()"
+                        style="width:auto; display:inline-block; padding:0.5rem 1rem; margin:0 0 0 1rem; font-size:0.9rem;">Copy</button>
+                </div>
+            </div>
+
+            <div id="tableContainer">
+                <table id="resultsTable">
+                    <thead>
+                        <tr>
+                            <th>Ticker</th>
+                            <th>Min</th>
+                            <th>Max</th>
+                            <th>Spread</th>
+                            <th>Link</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Rows will be injected here -->
+                    </tbody>
+                </table>
+            </div>
+            <div id="noResults" class="empty-state" style="display:none;">
+                No tickers found matching criteria (Spread &le; 1.02).
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let jobId = null;
+        let pollInterval = null;
+        let foundTickers = [];
+        let currentTab = 'custom';
+
+        function switchTab(tab) {
+            currentTab = tab;
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            // Find the button that was clicked. In this case, we can use the tab name or event.target
+            // But better to use the one that matches the tab name if called from onclick
+            const targetBtn = Array.from(document.querySelectorAll('.tab-btn')).find(b => b.innerText.toLowerCase().includes(tab));
+            if (targetBtn) targetBtn.classList.add('active');
+
+            if (tab === 'custom') {
+                document.getElementById('customSection').style.display = 'block';
+                document.getElementById('prefsSection').style.display = 'none';
+                document.getElementById('resultsCard').style.display = 'none';
+            } else {
+                document.getElementById('customSection').style.display = 'none';
+                document.getElementById('prefsSection').style.display = 'block';
+                loadPrefs();
+            }
+        }
+
+        async function loadPrefs() {
+            try {
+                const response = await fetch('/prefs');
+                const data = await response.json();
+
+                const statusEl = document.getElementById('prefsStatus');
+                if (data.status === 'processing') {
+                    const percent = data.total > 0 ? Math.round((data.progress / data.total) * 100) : 0;
+                    statusEl.innerText = `Analyzing... ${percent}% (${data.progress}/${data.total})`;
+                    // Show partial results if available? No, usually completed is better.
+                    // But if it's long, we can show what we have.
+                    if (data.results && data.results.length > 0) {
+                        foundTickers = data.results.map(r => r.ticker).sort();
+                        displayResults(data.results);
+                    }
+                    setTimeout(loadPrefs, 3000);
+                } else if (data.status === 'completed') {
+                    statusEl.innerText = `Last Updated: ${data.last_updated}`;
+                    foundTickers = data.results.map(r => r.ticker).sort();
+                    displayResults(data.results);
+                } else {
+                    statusEl.innerText = "Status: " + data.status;
+                }
+
+            } catch (e) {
+                console.error(e);
+            }
+        }
+
+        async function refreshPrefs() {
+            await fetch('/refresh_prefs', { method: 'POST' });
+            loadPrefs();
+        }
+
+        async function startAnalysis() {
+            const tickers = document.getElementById('tickers').value;
+            if (!tickers.trim()) {
+                alert("Please enter at least one ticker.");
+                return;
+            }
+
+            // Reset UI
+            document.getElementById('analyzeBtn').disabled = true;
+            document.getElementById('analyzeBtn').innerText = "Analyzing...";
+            document.getElementById('progressContainer').style.display = 'block';
+            document.getElementById('resultsCard').style.display = 'none';
+            document.querySelector('#resultsTable tbody').innerHTML = '';
+            document.getElementById('foundLabel').style.display = 'none';
+            updateProgress(0, "Starting...");
+            foundTickers = [];
+
+            try {
+                const formData = new FormData();
+                formData.append('tickers', tickers);
+
+                const response = await fetch('/find', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await response.json();
+                if (data.error) throw new Error(data.error);
+
+                jobId = data.job_id;
+                pollInterval = setInterval(pollStatus, 2000); // Poll every 2s
+
+            } catch (e) {
+                alert("Error: " + e.message);
+                resetUI();
+            }
+        }
+
+        async function pollStatus() {
+            if (!jobId) return;
+
+            try {
+                const response = await fetch(`/status/${jobId}`);
+                const job = await response.json();
+
+                if (job.status === 'processing') {
+                    const percent = Math.round((job.progress / job.total) * 100);
+                    updateProgress(percent, `Processed ${job.progress} of ${job.total}`);
+                } else if (job.status === 'completed') {
+                    clearInterval(pollInterval);
+                    updateProgress(100, "Completed!");
+                    foundTickers = job.results.map(r => r.ticker).sort();
+                    displayResults(job.results);
+                    resetUI();
+                }
+
+            } catch (e) {
+                console.error("Polling error:", e);
+            }
+        }
+
+        function updateProgress(percent, text) {
+            document.getElementById('progressFill').style.width = percent + '%';
+            document.getElementById('progressPercent').innerText = percent + '%';
+            document.getElementById('progressText').innerText = text;
+        }
+
+        function displayResults(results) {
+            document.getElementById('resultsCard').style.display = 'block';
+            const tbody = document.querySelector('#resultsTable tbody');
+            const noResults = document.getElementById('noResults');
+            const table = document.getElementById('resultsTable');
+            const foundLabel = document.getElementById('foundLabel');
+            const matchCount = document.getElementById('matchCount');
+
+            // Clear the table first to avoid duplicates or issues when reloading
+            tbody.innerHTML = '';
+
+            if (results.length === 0) {
+                table.style.display = 'none';
+                noResults.style.display = 'block';
+                foundLabel.style.display = 'none';
+                return;
+            } else {
+                table.style.display = 'table';
+                noResults.style.display = 'none';
+                foundLabel.style.display = 'block';
+                matchCount.innerText = results.length;
+            }
+
+            // Sort for table display too
+            results.sort((a, b) => a.ticker.localeCompare(b.ticker));
+
+            results.forEach(item => {
+                const tr = document.createElement('tr');
+                const tvUrl = `https://www.tradingview.com/chart/?symbol=${item.tv_symbol}`;
+
+                tr.innerHTML = `
+                <td><strong>${item.ticker}</strong></td>
+                <td>$${item.min}</td>
+                <td>$${item.max}</td>
+                <td><span class="spread-badge">${item.spread}</span></td>
+                <td><a href="${tvUrl}" target="_blank" class="tv-link">View Chart</a></td>
+            `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function copyToClipboard() {
+            const text = foundTickers.join(', ');
+            navigator.clipboard.writeText(text).then(() => {
+                alert("Copied " + foundTickers.length + " tickers to clipboard!");
+            }).catch(err => {
+                console.error('Failed to copy: ', err);
+            });
+        }
+
+        function resetUI() {
+            document.getElementById('analyzeBtn').disabled = false;
+            document.getElementById('analyzeBtn').innerText = "Analyze Tickers";
+        }
+    </script>
+
+</body>
+
+</html>
