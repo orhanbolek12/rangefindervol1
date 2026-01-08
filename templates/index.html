@@ -4,389 +4,507 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Spread Finder</title>
+    <title>Woldebots | Financial Intelligence</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=Plus+Jakarta+Sans:wght@300;400;500;700&display=swap"
+        rel="stylesheet">
     <style>
         :root {
-            --bg-color: #0f172a;
-            --card-bg: #1e293b;
-            --accent: #3b82f6;
-            --text-main: #f8fafc;
-            --text-muted: #94a3b8;
+            --bg-dark: #07090e;
+            --accent-primary: #3b82f6;
+            --accent-secondary: #8b5cf6;
+            --glass-bg: rgba(30, 41, 59, 0.7);
+            --glass-border: rgba(255, 255, 255, 0.1);
+            --text-primary: #f8fafc;
+            --text-secondary: #94a3b8;
             --success: #10b981;
+            --error: #ef4444;
+            --card-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.8);
+        }
+
+        * {
+            box-sizing: border-box;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         body {
-            font-family: 'Inter', system-ui, -apple-system, sans-serif;
-            background-color: var(--bg-color);
-            color: var(--text-main);
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background: radial-gradient(circle at top right, #1e1b4b, #07090e 60%);
+            background-attachment: fixed;
+            color: var(--text-primary);
             margin: 0;
+            min-height: 100vh;
             display: flex;
             flex-direction: column;
             align-items: center;
-            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* W Logo Styling */
+        .brand-container {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 3.5rem;
+            margin-top: 3rem;
+            animation: fadeInDown 0.8s ease-out;
+        }
+
+        .logo-w {
+            width: 48px;
+            height: 48px;
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Outfit', sans-serif;
+            font-weight: 800;
+            font-size: 28px;
+            color: white;
+            box-shadow: 0 0 20px rgba(59, 130, 246, 0.5);
+        }
+
+        .brand-name {
+            font-family: 'Outfit', sans-serif;
+            font-size: 2.2rem;
+            font-weight: 800;
+            letter-spacing: -1px;
+            background: linear-gradient(135deg, #fff 40%, rgba(255, 255, 255, 0.5));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
         }
 
         .container {
             width: 100%;
-            max-width: 900px;
-            padding: 2rem;
+            max-width: 960px;
+            padding: 0 1.5rem 5rem 1.5rem;
         }
 
-        header {
-            text-align: center;
-            margin-bottom: 3rem;
-            padding-top: 2rem;
-        }
-
-        h1 {
-            font-size: 3rem;
-            font-weight: 800;
-            background: linear-gradient(to right, #60a5fa, #a78bfa);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            margin: 0;
-        }
-
-        .card {
-            background-color: var(--card-bg);
-            border-radius: 1rem;
-            padding: 2rem;
-            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
-            border: 1px solid rgba(255, 255, 255, 0.05);
+        /* Glass Cards */
+        .glass-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            padding: 2.5rem;
+            box-shadow: var(--card-shadow);
             margin-bottom: 2rem;
         }
 
+        /* Professional Tabs */
+        .tabs-nav {
+            display: flex;
+            background: rgba(15, 23, 42, 0.6);
+            padding: 0.4rem;
+            border-radius: 14px;
+            margin-bottom: 2.5rem;
+            border: 1px solid var(--glass-border);
+            gap: 0.4rem;
+        }
+
+        .tab-trigger {
+            flex: 1;
+            padding: 0.8rem 1rem;
+            border: none;
+            background: transparent;
+            color: var(--text-secondary);
+            font-weight: 600;
+            font-size: 0.95rem;
+            cursor: pointer;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.6rem;
+        }
+
+        .tab-trigger.active {
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--text-primary);
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+        }
+
+        .tab-trigger:hover:not(.active) {
+            background: rgba(255, 255, 255, 0.03);
+            color: var(--text-primary);
+        }
+
+        /* Inputs & Buttons */
         textarea {
             width: 100%;
-            height: 150px;
-            background-color: #0f172a;
-            border: 1px solid #334155;
-            color: var(--text-main);
-            border-radius: 0.5rem;
-            padding: 1rem;
-            font-family: monospace;
-            resize: vertical;
+            height: 160px;
+            background: rgba(0, 0, 0, 0.2);
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+            padding: 1.2rem;
+            color: white;
+            font-family: 'JetBrains Mono', monospace;
             font-size: 0.9rem;
-            box-sizing: border-box;
-            /* Important for padding */
+            resize: none;
+            outline: none;
+            margin-bottom: 1.5rem;
         }
 
         textarea:focus {
-            outline: 2px solid var(--accent);
-            border-color: transparent;
+            border-color: var(--accent-primary);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
         }
 
-        .btn {
-            display: block;
+        .btn-primary {
             width: 100%;
-            background: linear-gradient(135deg, var(--accent), #2563eb);
+            background: linear-gradient(135deg, var(--accent-primary), #2563eb);
             color: white;
-            padding: 1rem;
+            padding: 1.1rem;
             border: none;
-            border-radius: 0.5rem;
-            font-size: 1.1rem;
-            font-weight: 600;
+            border-radius: 12px;
+            font-weight: 700;
+            font-size: 1rem;
             cursor: pointer;
-            margin-top: 1rem;
-            transition: transform 0.1s, opacity 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.8rem;
+            box-shadow: 0 4px 15px rgba(37, 99, 235, 0.3);
         }
 
-        .btn:hover {
-            opacity: 0.9;
-            transform: translateY(-1px);
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(37, 99, 235, 0.4);
         }
 
-        .btn:disabled {
-            background: #475569;
+        .btn-primary:disabled {
+            opacity: 0.6;
             cursor: not-allowed;
             transform: none;
         }
 
-        /* Progress Bar */
-        .progress-container {
-            margin-top: 2rem;
-            display: none;
-        }
-
-        .progress-label {
+        /* Results Management */
+        .results-header {
             display: flex;
             justify-content: space-between;
-            margin-bottom: 0.5rem;
-            color: var(--text-muted);
+            align-items: center;
+            margin-bottom: 1.5rem;
         }
 
-        .progress-bar {
+        .results-title {
+            font-weight: 700;
+            font-size: 1.4rem;
+            margin: 0;
+        }
+
+        .badge-count {
+            background: var(--accent-primary);
+            color: white;
+            padding: 0.2rem 0.6rem;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            font-weight: 800;
+        }
+
+        /* Table Aesthetics */
+        .table-responsive {
             width: 100%;
-            height: 8px;
-            background-color: #334155;
-            border-radius: 4px;
-            overflow: hidden;
+            overflow-x: auto;
         }
 
-        .progress-fill {
-            height: 100%;
-            background-color: var(--success);
-            width: 0%;
-            transition: width 0.3s ease;
-        }
-
-        /* Results Table */
         table {
             width: 100%;
-            border-collapse: collapse;
-            margin-top: 1rem;
-        }
-
-        th,
-        td {
-            padding: 1rem;
-            text-align: left;
-            border-bottom: 1px solid #334155;
+            border-collapse: separate;
+            border-spacing: 0 0.8rem;
         }
 
         th {
-            color: var(--text-muted);
-            font-weight: 600;
-            text-transform: uppercase;
+            text-align: left;
+            padding: 1rem;
+            color: var(--text-secondary);
             font-size: 0.8rem;
-            letter-spacing: 0.05em;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-weight: 700;
         }
 
-        tr:last-child td {
-            border-bottom: none;
+        td {
+            padding: 1.2rem 1rem;
+            background: rgba(255, 255, 255, 0.03);
+            border-top: 1px solid var(--glass-border);
+            border-bottom: 1px solid var(--glass-border);
         }
 
-        .spread-badge {
-            display: inline-block;
-            padding: 0.25rem 0.75rem;
-            background-color: rgba(16, 185, 129, 0.2);
+        td:first-child {
+            border-left: 1px solid var(--glass-border);
+            border-radius: 12px 0 0 12px;
+        }
+
+        td:last-child {
+            border-right: 1px solid var(--glass-border);
+            border-radius: 0 12px 12px 0;
+        }
+
+        .ticker-name {
+            font-weight: 700;
+            font-size: 1.05rem;
+            color: #fff;
+        }
+
+        .spread-val {
+            font-family: 'Outfit', sans-serif;
+            background: rgba(16, 185, 129, 0.1);
             color: var(--success);
-            border-radius: 1rem;
-            font-weight: 600;
-            font-size: 0.9rem;
+            padding: 0.3rem 0.6rem;
+            border-radius: 6px;
+            font-weight: 700;
         }
 
-        a.tv-link {
-            color: var(--accent);
+        .tv-btn {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 0.5rem 0.8rem;
+            border-radius: 8px;
+            color: var(--accent-primary);
             text-decoration: none;
-        }
-
-        a.tv-link:hover {
-            text-decoration: underline;
-        }
-
-        .tabs {
-            margin-bottom: 2rem;
-            display: flex;
-            gap: 1rem;
-        }
-
-        .tab-btn {
-            background-color: var(--card-bg);
-            color: var(--text-muted);
-            border: 1px solid rgba(255, 255, 255, 0.05);
-            padding: 1rem 2rem;
-            border-radius: 0.5rem;
-            cursor: pointer;
-            font-size: 1.1rem;
+            font-size: 0.85rem;
             font-weight: 600;
-            transition: all 0.2s;
+            border: 1px solid transparent;
         }
 
-        .tab-btn.active {
-            background: linear-gradient(135deg, var(--accent), #2563eb);
-            color: white;
-            border-color: transparent;
+        .tv-btn:hover {
+            border-color: var(--accent-primary);
+            background: rgba(59, 130, 246, 0.1);
         }
 
-        .tab-btn:hover:not(.active) {
-            background-color: #334155;
-            color: var(--text-main);
-        }
-
-        .tabs {
-            margin-bottom: 2rem;
-            display: flex;
-            gap: 1rem;
-        }
-
-        .tab-btn {
-            background-color: var(--card-bg);
-            color: var(--text-muted);
-            border: 1px solid rgba(255, 255, 255, 0.05);
-            padding: 1rem 2rem;
-            border-radius: 0.5rem;
-            cursor: pointer;
-            font-size: 1.1rem;
-            font-weight: 600;
-            transition: all 0.2s;
-        }
-
-        .tab-btn.active {
-            background: linear-gradient(135deg, var(--accent), #2563eb);
-            color: white;
-            border-color: transparent;
-        }
-
-        .tab-btn:hover:not(.active) {
-            background-color: #334155;
-            color: var(--text-main);
-        }
-
-        .new-badge {
-            display: inline-block;
-            padding: 0.1rem 0.4rem;
+        /* New Badge */
+        .new-indicator {
             background: var(--success);
             color: white;
+            font-size: 0.65rem;
+            padding: 0.15rem 0.4rem;
             border-radius: 4px;
-            font-size: 0.7rem;
-            font-weight: 800;
-            margin-left: 0.5rem;
-            vertical-align: middle;
-            animation: pulse 2s infinite;
+            margin-left: 8px;
+            text-transform: uppercase;
+            font-weight: 900;
+            animation: pulse-green 2s infinite;
         }
 
-        @keyframes pulse {
+        @keyframes pulse-green {
             0% {
-                opacity: 1;
-                transform: scale(1);
+                box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
             }
 
-            50% {
-                opacity: 0.7;
-                transform: scale(1.05);
+            70% {
+                box-shadow: 0 0 0 6px rgba(16, 185, 129, 0);
             }
 
             100% {
-                opacity: 1;
-                transform: scale(1);
+                box-shadow: 0 0 0 0 rgba(16, 185, 129, 0);
             }
         }
 
-        .empty-state {
-            text-align: center;
-            color: var(--text-muted);
-            padding: 2rem;
-            font-style: italic;
+        @keyframes fadeInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Status Indicator */
+        .status-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--text-secondary);
+        }
+
+        .status-dot.processing {
+            background: var(--accent-primary);
+            animation: blink 1s infinite;
+        }
+
+        @keyframes blink {
+            0% {
+                opacity: 0.4;
+            }
+
+            50% {
+                opacity: 1;
+            }
+
+            100% {
+                opacity: 0.4;
+            }
+        }
+
+        /* Copy Button */
+        .btn-outline {
+            background: transparent;
+            border: 1px solid var(--glass-border);
+            color: var(--text-primary);
+            padding: 0.6rem 1.2rem;
+            border-radius: 10px;
+            font-weight: 600;
+            font-size: 0.85rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn-outline:hover {
+            background: rgba(255, 255, 255, 0.05);
+            border-color: rgba(255, 255, 255, 0.2);
         }
     </style>
 </head>
 
 <body>
 
+    <div class="brand-container">
+        <div class="logo-w">W</div>
+        <div class="brand-name">Woldebots</div>
+    </div>
+
     <div class="container">
-        <header>
-            <h1>Spread Finder</h1>
-            <p style="color: var(--text-muted);">Find low volatility dividend stocks (Max - Min &le; 1.02)</p>
-        </header>
+        <nav class="tabs-nav">
+            <button class="tab-trigger active" onclick="switchTab('custom')">Custom Analysis</button>
+            <button class="tab-trigger" onclick="switchTab('prefs')">Smart Watchlist</button>
+            <button class="tab-trigger" onclick="switchTab('imbalance')">Imbalance AI</button>
+        </nav>
 
-        <div class="tabs">
-            <button class="tab-btn active" onclick="switchTab('custom')">Custom Search</button>
-            <button class="tab-btn" onclick="switchTab('prefs')">Saved Watchlist</button>
-            <button class="tab-btn" onclick="switchTab('imbalance')">Imbalance Search</button>
-        </div>
+        <!-- Dynamic Content Area -->
+        <main id="mainContainer">
 
-        <!-- Custom Search Section -->
-        <div id="customSection" class="card">
-            <label for="tickers" style="display:block; margin-bottom: 0.5rem; font-weight:600;">Enter Tickers (ABR-D,
-                PCG-G...)</label>
-            <textarea id="tickers" placeholder="Paste your list here...
-ABR-D
-PCG-G
-JBK
-..."></textarea>
-            <button id="analyzeBtn" class="btn" onclick="startAnalysis()">Analyze Tickers</button>
+            <!-- Custom Search -->
+            <section id="customSection" class="glass-card">
+                <h3 style="margin-top:0; font-weight:700;">Deep Sweep Analysis</h3>
+                <p style="color:var(--text-secondary); font-size: 0.9rem; margin-bottom: 2rem;">
+                    Run custom real-time analysis on a batch of tickers. We'll check for 90d dividend-adjusted
+                    stability.
+                </p>
+                <textarea id="tickers" placeholder="Paste symbols here (e.g. ABR-D, PCG-G)..."></textarea>
+                <button id="analyzeBtn" class="btn-primary" onclick="startAnalysis()">
+                    Run Intelligence Report
+                </button>
 
-            <div class="progress-container" id="progressContainer">
-                <div class="progress-label">
-                    <span id="progressText">Processing...</span>
-                    <span id="progressPercent">0%</span>
+                <!-- Progress Container inside card -->
+                <div id="progressContainer"
+                    style="display:none; margin-top:2.5rem; border-top: 1px solid var(--glass-border); padding-top:2rem;">
+                    <div style="display:flex; justify-content:space-between; margin-bottom:0.8rem; font-size:0.9rem;">
+                        <span id="progressText" style="color:var(--text-secondary)">Scanning Market Data...</span>
+                        <span id="progressPercent" style="font-weight:800; color:var(--accent-primary)">0%</span>
+                    </div>
+                    <div
+                        style="width:100%; height:8px; background:rgba(255,255,255,0.05); border-radius:10px; overflow:hidden;">
+                        <div id="progressFill"
+                            style="width:0%; height:100%; background:linear-gradient(to right, var(--accent-primary), var(--accent-secondary)); transition: width 0.4s ease;">
+                        </div>
+                    </div>
                 </div>
-                <div class="progress-bar">
-                    <div class="progress-fill" id="progressFill"></div>
+            </section>
+
+            <!-- Prefs Section -->
+            <section id="prefsSection" class="glass-card" style="display:none;">
+                <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:1.5rem;">
+                    <div>
+                        <h3 style="margin:0; font-weight:700;">Smart Watchlist</h3>
+                        <div class="status-pill" style="margin-top:0.5rem;">
+                            <span id="prefsDot" class="status-dot"></span>
+                            <span id="prefsStatus">Syncing...</span>
+                        </div>
+                    </div>
+                    <button class="btn-outline" onclick="refreshPrefs()">Force Sync</button>
                 </div>
-            </div>
-        </div>
+                <p style="color:var(--text-secondary); font-size: 0.9rem;">
+                    Automated daily screening (16:20 TR) for low-volatility preferred stocks matching $1.00 total range
+                    criteria.
+                </p>
+            </section>
 
-        <!-- Prefs Section -->
-        <div id="prefsSection" class="card" style="display:none;">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
-                <div>
-                    <h2 style="margin:0; font-size:1.5rem;">Saved Watchlist</h2>
-                    <small id="prefsStatus" style="color:var(--text-muted)">Loading status...</small>
+            <!-- Imbalance Section -->
+            <section id="imbalanceSection" class="glass-card" style="display:none;">
+                <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:1.5rem;">
+                    <div>
+                        <h3 style="margin:0; font-weight:700;">Imbalance AI</h3>
+                        <div class="status-pill" style="margin-top:0.5rem;">
+                            <span id="imbalanceDot" class="status-dot"></span>
+                            <span id="imbalanceStatus">Awaiting Trigger...</span>
+                        </div>
+                    </div>
+                    <button class="btn-outline" onclick="refreshImbalance()">Recalculate AI</button>
                 </div>
-                <button class="btn" onclick="refreshPrefs()"
-                    style="width:auto; padding:0.5rem 1rem; font-size:0.9rem;">Refresh List</button>
-            </div>
-            <p style="color:var(--text-muted); margin-bottom:1rem;">
-                This list is continuously analyzed against valid criteria (90d, Spread &ge; 0.10, Range &le; 1.00).
-            </p>
-        </div>
 
-        <!-- Imbalance Section -->
-        <div id="imbalanceSection" class="card" style="display:none;">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
-                <div>
-                    <h2 style="margin:0; font-size:1.5rem;">Imbalance Search</h2>
-                    <small id="imbalanceStatus" style="color:var(--text-muted)">Loading status...</small>
+                <div
+                    style="margin-top:2.5rem; margin-bottom: 2rem; border-top: 1px solid var(--glass-border); padding-top:2rem;">
+                    <label
+                        style="display:block; font-size:0.85rem; font-weight:700; color:var(--text-secondary); text-transform:uppercase; margin-bottom:1rem;">Manual
+                        AI Override</label>
+                    <textarea id="imbalanceTickers"
+                        placeholder="Batch symbols for 20d pattern recognition..."></textarea>
+                    <button id="analyzeImbalanceBtn" class="btn-primary" onclick="startImbalanceAnalysis()">Identify
+                        Imbalance Patterns</button>
                 </div>
-                <button class="btn" onclick="refreshImbalance()"
-                    style="width:auto; padding:0.5rem 1rem; font-size:0.9rem;">Refresh List</button>
-            </div>
 
-            <div id="imbalanceInputArea" style="margin-top:2rem; border-top:1px solid #334155; padding-top:2rem;">
-                <label for="imbalanceTickers" style="display:block; margin-bottom: 0.5rem; font-weight:600;">Custom
-                    Imbalance Search</label>
-                <textarea id="imbalanceTickers" placeholder="Enter tickers to check for 20d patterns..."></textarea>
-                <button id="analyzeImbalanceBtn" class="btn" onclick="startImbalanceAnalysis()">Analyze for
-                    Imbalance</button>
-            </div>
-
-            <div class="progress-container" id="imbProgressContainer">
-                <div class="progress-label">
-                    <span id="imbProgressText">Processing...</span>
-                    <span id="imbProgressPercent">0%</span>
+                <!-- Imbalance Progress -->
+                <div id="imbProgressContainer" style="display:none; margin-bottom:2rem;">
+                    <div style="display:flex; justify-content:space-between; margin-bottom:0.8rem; font-size:0.9rem;">
+                        <span id="imbProgressText" style="color:var(--text-secondary)">Analyzing Patterns...</span>
+                        <span id="imbProgressPercent" style="font-weight:800; color:var(--accent-primary)">0%</span>
+                    </div>
+                    <div
+                        style="width:100%; height:8px; background:rgba(255,255,255,0.05); border-radius:10px; overflow:hidden;">
+                        <div id="imbProgressFill"
+                            style="width:0%; height:100%; background:linear-gradient(to right, var(--accent-primary), var(--accent-secondary)); transition: width 0.4s ease;">
+                        </div>
+                    </div>
                 </div>
-                <div class="progress-bar">
-                    <div class="progress-fill" id="imbProgressFill"></div>
+            </section>
+
+            <!-- Unified Results Area -->
+            <section id="resultsCard" class="glass-card" style="display:none;">
+                <div class="results-header">
+                    <h3 class="results-title">Analysis Output</h3>
+                    <div style="display:flex; align-items:center; gap:1.5rem;">
+                        <div id="foundLabel"
+                            style="display:none; font-weight:600; color:var(--text-secondary); font-size:0.9rem;">
+                            <span id="matchCount" class="badge-count">0</span> Matches
+                        </div>
+                        <button class="btn-outline" onclick="copyToClipboard()">Copy Symbols</button>
+                    </div>
                 </div>
-            </div>
 
-            <p style="color:var(--text-muted); margin-top:1rem; font-size:0.9rem;">
-                Analyzes 20d candles for Long/Short patterns (Wick &le; 0.05).
-            </p>
-        </div>
-
-        <div class="card" id="resultsCard" style="display:none;">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
-                <h2 style="margin:0;">Results</h2>
-                <div id="foundLabel" style="color:var(--success); font-weight:600; display:none;">
-                    <span id="matchCount">0</span> Tickers Found
-                    <button class="btn" onclick="copyToClipboard()"
-                        style="width:auto; display:inline-block; padding:0.5rem 1rem; margin:0 0 0 1rem; font-size:0.9rem;">Copy</button>
+                <div class="table-responsive">
+                    <table id="resultsTable">
+                        <thead>
+                            <tr id="tableHeaders">
+                                <!-- Headers injected -->
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Rows injected -->
+                        </tbody>
+                    </table>
                 </div>
-            </div>
 
-            <div id="tableContainer">
-                <table id="resultsTable">
-                    <thead>
-                        <tr>
-                            <th>Ticker</th>
-                            <th>Min</th>
-                            <th>Max</th>
-                            <th>Spread</th>
-                            <th>Link</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <!-- Rows will be injected here -->
-                    </tbody>
-                </table>
-            </div>
-            <div id="noResults" class="empty-state" style="display:none;">
-                No tickers found matching criteria (Spread &le; 1.02).
-            </div>
-        </div>
+                <div id="noResults"
+                    style="display:none; text-align:center; padding:3rem 0; color:var(--text-secondary); font-style:italic;">
+                    No datasets matched the defined intelligence parameters.
+                </div>
+            </section>
+        </main>
     </div>
 
     <script>
@@ -397,11 +515,13 @@ JBK
 
         function switchTab(tab) {
             currentTab = tab;
-            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-            const targetBtn = Array.from(document.querySelectorAll('.tab-btn')).find(b => b.innerText.toLowerCase().includes(tab.toLowerCase()));
-            if (targetBtn) targetBtn.classList.add('active');
+            document.querySelectorAll('.tab-trigger').forEach(b => b.classList.remove('active'));
+            // Find current tab button and set active
+            const btns = Array.from(document.querySelectorAll('.tab-trigger'));
+            const target = btns.find(b => b.innerText.toLowerCase().includes(tab.split(' ')[0].toLowerCase()));
+            if (target) target.classList.add('active');
 
-            // Initial UI reset
+            // Sections toggle
             document.getElementById('customSection').style.display = 'none';
             document.getElementById('prefsSection').style.display = 'none';
             document.getElementById('imbalanceSection').style.display = 'none';
@@ -418,26 +538,57 @@ JBK
             }
         }
 
+        async function loadPrefs() {
+            try {
+                const response = await fetch('/prefs');
+                const data = await response.json();
+                const statusEl = document.getElementById('prefsStatus');
+                const dot = document.getElementById('prefsDot');
+
+                if (data.status === 'processing') {
+                    dot.className = 'status-dot processing';
+                    const percent = data.total > 0 ? Math.round((data.progress / data.total) * 100) : 0;
+                    statusEl.innerText = `Analyzing Market... ${percent}%`;
+                    if (data.results && data.results.length > 0) {
+                        foundTickers = data.results.map(r => r.ticker).sort();
+                        displayResults(data.results);
+                    }
+                    setTimeout(loadPrefs, 3000);
+                } else {
+                    dot.className = 'status-dot';
+                    statusEl.innerText = data.last_updated ? `Last Updated: ${data.last_updated}` : 'Ready';
+                    foundTickers = data.results.map(r => r.ticker).sort();
+                    displayResults(data.results);
+                }
+            } catch (e) { console.error(e); }
+        }
+
+        async function refreshPrefs() {
+            await fetch('/refresh_prefs', { method: 'POST' });
+            loadPrefs();
+        }
+
         async function loadImbalance() {
             try {
                 const response = await fetch('/imbalance');
                 const data = await response.json();
-
                 const statusEl = document.getElementById('imbalanceStatus');
+                const dot = document.getElementById('imbalanceDot');
+
                 if (data.status === 'processing') {
+                    dot.className = 'status-dot processing';
                     const percent = data.total > 0 ? Math.round((data.progress / data.total) * 100) : 0;
-                    statusEl.innerText = `Analyzing Imbalance... ${percent}% (${data.progress}/${data.total})`;
+                    statusEl.innerText = `Pattern Recognition... ${percent}%`;
                     if (data.results && data.results.length > 0) {
                         foundTickers = data.results.map(r => r.ticker).sort();
                         displayResults(data.results, true);
                     }
                     setTimeout(loadImbalance, 3000);
-                } else if (data.status === 'completed') {
-                    statusEl.innerText = `Last Updated: ${data.last_updated}`;
+                } else {
+                    dot.className = 'status-dot';
+                    statusEl.innerText = data.last_updated ? `Sync Complete: ${data.last_updated}` : 'Operational';
                     foundTickers = data.results.map(r => r.ticker).sort();
                     displayResults(data.results, true);
-                } else {
-                    statusEl.innerText = "Status: " + data.status;
                 }
             } catch (e) { console.error(e); }
         }
@@ -447,99 +598,45 @@ JBK
             loadImbalance();
         }
 
-        async function loadPrefs() {
-            try {
-                const response = await fetch('/prefs');
-                const data = await response.json();
-
-                const statusEl = document.getElementById('prefsStatus');
-                if (data.status === 'processing') {
-                    const percent = data.total > 0 ? Math.round((data.progress / data.total) * 100) : 0;
-                    statusEl.innerText = `Analyzing... ${percent}% (${data.progress}/${data.total})`;
-                    // Show partial results if available? No, usually completed is better.
-                    // But if it's long, we can show what we have.
-                    if (data.results && data.results.length > 0) {
-                        foundTickers = data.results.map(r => r.ticker).sort();
-                        displayResults(data.results);
-                    }
-                    setTimeout(loadPrefs, 3000);
-                } else if (data.status === 'completed') {
-                    statusEl.innerText = `Last Updated: ${data.last_updated}`;
-                    foundTickers = data.results.map(r => r.ticker).sort();
-                    displayResults(data.results);
-                } else {
-                    statusEl.innerText = "Status: " + data.status;
-                }
-
-            } catch (e) {
-                console.error(e);
-            }
-        }
-
-        async function refreshPrefs() {
-            await fetch('/refresh_prefs', { method: 'POST' });
-            loadPrefs();
-        }
-
         async function startAnalysis() {
-            const tickers = document.getElementById('tickers').value;
-            if (!tickers.trim()) {
-                alert("Please enter at least one ticker.");
-                return;
-            }
+            const tickersElement = document.getElementById('tickers');
+            const tickers = tickersElement.value;
+            if (!tickers.trim()) return;
 
-            // Reset UI
             document.getElementById('analyzeBtn').disabled = true;
-            document.getElementById('analyzeBtn').innerText = "Analyzing...";
+            document.getElementById('analyzeBtn').innerText = "Processing Data...";
             document.getElementById('progressContainer').style.display = 'block';
             document.getElementById('resultsCard').style.display = 'none';
             document.querySelector('#resultsTable tbody').innerHTML = '';
-            document.getElementById('foundLabel').style.display = 'none';
-            updateProgress(0, "Starting...");
-            foundTickers = [];
+            updateProgress(0, "Initiating Handshake...");
 
             try {
                 const formData = new FormData();
                 formData.append('tickers', tickers);
-
-                const response = await fetch('/find', {
-                    method: 'POST',
-                    body: formData
-                });
-
-                const data = await response.json();
-                if (data.error) throw new Error(data.error);
-
+                const res = await fetch('/find', { method: 'POST', body: formData });
+                const data = await res.json();
                 jobId = data.job_id;
-                pollInterval = setInterval(pollStatus, 2000); // Poll every 2s
-
-            } catch (e) {
-                alert("Error: " + e.message);
-                resetUI();
-            }
+                pollInterval = setInterval(pollStatus, 2000);
+            } catch (e) { alert("Security Error: " + e.message); resetUI(); }
         }
 
         async function pollStatus() {
             if (!jobId) return;
-
             try {
-                const response = await fetch(`/status/${jobId}`);
-                const job = await response.json();
+                const res = await fetch(`/status/${jobId}`);
+                const job = await res.json();
 
                 if (job.status === 'processing') {
                     const percent = Math.round((job.progress / job.total) * 100);
-                    updateProgress(percent, `Processed ${job.progress} of ${job.total}`);
+                    updateProgress(percent, `Analyzed ${job.progress}/${job.total} Nodes`);
                 } else if (job.status === 'completed') {
                     clearInterval(pollInterval);
-                    updateProgress(100, "Completed!");
+                    updateProgress(100, "Verification Complete");
                     foundTickers = job.results.map(r => r.ticker).sort();
                     displayResults(job.results);
                     resetUI();
                 }
-
-            } catch (e) {
-                console.error("Polling error:", e);
-            }
+            } catch (e) { console.error(e); }
         }
 
         function updateProgress(percent, text) {
@@ -548,146 +645,44 @@ JBK
             document.getElementById('progressText').innerText = text;
         }
 
-        function displayResults(results, isImbalance = false) {
-            document.getElementById('resultsCard').style.display = 'block';
-            const tbody = document.querySelector('#resultsTable tbody');
-            const thead = document.querySelector('#resultsTable thead');
-            const noResults = document.getElementById('noResults');
-            const table = document.getElementById('resultsTable');
-            const foundLabel = document.getElementById('foundLabel');
-            const matchCount = document.getElementById('matchCount');
-
-            // Clear the table first
-            tbody.innerHTML = '';
-
-            if (results.length === 0) {
-                table.style.display = 'none';
-                noResults.style.display = 'block';
-                foundLabel.style.display = 'none';
-                return;
-            } else {
-                table.style.display = 'table';
-                noResults.style.display = 'none';
-                foundLabel.style.display = 'block';
-                matchCount.innerText = results.length;
-            }
-
-            // Update Headers for Imbalance
-            if (isImbalance) {
-                thead.innerHTML = `
-                    <tr>
-                        <th>Ticker</th>
-                        <th>Pattern</th>
-                        <th>Green Bars</th>
-                        <th>Red Bars</th>
-                        <th>Link</th>
-                    </tr>
-                `;
-            } else {
-                thead.innerHTML = `
-                    <tr>
-                        <th>Ticker</th>
-                        <th>Min Price</th>
-                        <th>Max Price</th>
-                        <th>Range</th>
-                        <th>Link</th>
-                    </tr>
-                `;
-            }
-
-            results.sort((a, b) => a.ticker.localeCompare(b.ticker));
-
-            results.forEach(item => {
-                const tr = document.createElement('tr');
-                const tvUrl = `https://www.tradingview.com/chart/?symbol=${item.tv_symbol}`;
-
-                if (isImbalance) {
-                    const typeClass = item.type === 'Long' ? 'spread-badge' : 'spread-badge'; // Can differentiate later
-                    tr.innerHTML = `
-                        <td>
-                            <strong>${item.ticker}</strong>
-                            ${item.is_new ? '<span class="new-badge">NEW</span>' : ''}
-                        </td>
-                        <td><span class="spread-badge" style="background: ${item.type === 'Long' ? '#2ecc71' : '#e74c3c'}">${item.type}</span></td>
-                        <td>${item.green_count}</td>
-                        <td>${item.red_count}</td>
-                        <td><a href="${tvUrl}" target="_blank" class="tv-link">View Chart</a></td>
-                    `;
-                } else {
-                    tr.innerHTML = `
-                        <td>
-                            <strong>${item.ticker}</strong>
-                            ${item.is_new ? '<span class="new-badge">NEW</span>' : ''}
-                        </td>
-                        <td>$${item.min}</td>
-                        <td>$${item.max}</td>
-                        <td><span class="spread-badge">${item.spread}</span></td>
-                        <td><a href="${tvUrl}" target="_blank" class="tv-link">View Chart</a></td>
-                    `;
-                }
-                tbody.appendChild(tr);
-            });
-        }
-
         async function startImbalanceAnalysis() {
-            const tickers = document.getElementById('imbalanceTickers').value;
-            if (!tickers.trim()) {
-                alert("Please enter at least one ticker.");
-                return;
-            }
+            const tickersElement = document.getElementById('imbalanceTickers');
+            const tickers = tickersElement.value;
+            if (!tickers.trim()) return;
 
-            // Reset UI
             document.getElementById('analyzeImbalanceBtn').disabled = true;
-            document.getElementById('analyzeImbalanceBtn').innerText = "Analyzing...";
+            document.getElementById('analyzeImbalanceBtn').innerText = "AI Scan Running...";
             document.getElementById('imbProgressContainer').style.display = 'block';
             document.getElementById('resultsCard').style.display = 'none';
-            document.querySelector('#resultsTable tbody').innerHTML = '';
-            document.getElementById('foundLabel').style.display = 'none';
-            updateImbProgress(0, "Starting...");
-            foundTickers = [];
+            updateImbProgress(0, "Deploying AI Models...");
 
             try {
                 const formData = new FormData();
                 formData.append('tickers', tickers);
-
-                const response = await fetch('/find_imbalance', {
-                    method: 'POST',
-                    body: formData
-                });
-
-                const data = await response.json();
-                if (data.error) throw new Error(data.error);
-
+                const res = await fetch('/find_imbalance', { method: 'POST', body: formData });
+                const data = await res.json();
                 jobId = data.job_id;
                 pollInterval = setInterval(imbPollStatus, 2000);
-
-            } catch (e) {
-                alert("Error: " + e.message);
-                resetUI();
-            }
+            } catch (e) { alert("AI Error: " + e.message); resetUI(); }
         }
 
         async function imbPollStatus() {
             if (!jobId) return;
-
             try {
-                const response = await fetch(`/status/${jobId}`);
-                const job = await response.json();
+                const res = await fetch(`/status/${jobId}`);
+                const job = await res.json();
 
                 if (job.status === 'processing') {
                     const percent = Math.round((job.progress / job.total) * 100);
-                    updateImbProgress(percent, `Processed ${job.progress} of ${job.total}`);
+                    updateImbProgress(percent, `Synthesizing ${job.progress}/${job.total} Data Points`);
                 } else if (job.status === 'completed') {
                     clearInterval(pollInterval);
-                    updateImbProgress(100, "Completed!");
+                    updateImbProgress(100, "Inference Completed");
                     foundTickers = job.results.map(r => r.ticker).sort();
                     displayResults(job.results, true);
                     resetUI();
                 }
-
-            } catch (e) {
-                console.error("Polling error:", e);
-            }
+            } catch (e) { console.error(e); }
         }
 
         function updateImbProgress(percent, text) {
@@ -696,20 +691,74 @@ JBK
             document.getElementById('imbProgressText').innerText = text;
         }
 
+        function displayResults(results, isImbalance = false) {
+            document.getElementById('resultsCard').style.display = 'block';
+            const tbody = document.querySelector('#resultsTable tbody');
+            const hrow = document.getElementById('tableHeaders');
+            const noRes = document.getElementById('noResults');
+            const foundLab = document.getElementById('foundLabel');
+
+            tbody.innerHTML = '';
+
+            if (!results || results.length === 0) {
+                document.getElementById('resultsTable').style.display = 'none';
+                noRes.style.display = 'block';
+                foundLab.style.display = 'none';
+                return;
+            }
+
+            document.getElementById('resultsTable').style.display = 'table';
+            noRes.style.display = 'none';
+            foundLab.style.display = 'block';
+            document.getElementById('matchCount').innerText = results.length;
+
+            if (isImbalance) {
+                hrow.innerHTML = `<th>Ticker</th><th>Pattern</th><th>Green</th><th>Red</th><th>Intelligence</th>`;
+            } else {
+                hrow.innerHTML = `<th>Ticker</th><th>Low</th><th>High</th><th>Spread</th><th>Intelligence</th>`;
+            }
+
+            results.sort((a, b) => a.ticker.localeCompare(b.ticker)).forEach(item => {
+                const tr = document.createElement('tr');
+                const tvUrl = `https://www.tradingview.com/chart/?symbol=${item.tv_symbol}`;
+
+                if (isImbalance) {
+                    tr.innerHTML = `
+                        <td><span class="ticker-name">${item.ticker}</span>${item.is_new ? '<span class="new-indicator">New</span>' : ''}</td>
+                        <td><span class="spread-val" style="background:${item.type === 'Long' ? 'rgba(16,185,129,0.1)' : 'rgba(239,68,68,0.1)'}; color:${item.type === 'Long' ? 'var(--success)' : 'var(--error)'}">${item.type}</span></td>
+                        <td>${item.green_count}</td>
+                        <td>${item.red_count}</td>
+                        <td><a href="${tvUrl}" target="_blank" class="tv-btn">View Nodes</a></td>
+                    `;
+                } else {
+                    tr.innerHTML = `
+                        <td><span class="ticker-name">${item.ticker}</span>${item.is_new ? '<span class="new-indicator">New</span>' : ''}</td>
+                        <td>$${item.min}</td>
+                        <td>$${item.max}</td>
+                        <td><span class="spread-val">$${item.spread}</span></td>
+                        <td><a href="${tvUrl}" target="_blank" class="tv-btn">View Nodes</a></td>
+                    `;
+                }
+                tbody.appendChild(tr);
+            });
+        }
+
         function copyToClipboard() {
+            if (foundTickers.length === 0) return;
             const text = foundTickers.join(', ');
             navigator.clipboard.writeText(text).then(() => {
-                alert("Copied " + foundTickers.length + " tickers to clipboard!");
-            }).catch(err => {
-                console.error('Failed to copy: ', err);
+                const btn = document.querySelector('.btn-outline[onclick="copyToClipboard()"]');
+                const oldText = btn.innerText;
+                btn.innerText = "Copied!";
+                setTimeout(() => btn.innerText = oldText, 2000);
             });
         }
 
         function resetUI() {
             document.getElementById('analyzeBtn').disabled = false;
-            document.getElementById('analyzeBtn').innerText = "Analyze Tickers";
+            document.getElementById('analyzeBtn').innerText = "Run Intelligence Report";
             document.getElementById('analyzeImbalanceBtn').disabled = false;
-            document.getElementById('analyzeImbalanceBtn').innerText = "Analyze for Imbalance";
+            document.getElementById('analyzeImbalanceBtn').innerText = "Identify Imbalance Patterns";
         }
     </script>
 
