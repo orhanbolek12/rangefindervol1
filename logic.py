@@ -62,6 +62,19 @@ def fetch_and_process(tickers, progress_callback=None):
                 # TradingView Link Logic
                 tv_link_symbol = parse_ticker_tv(raw_ticker)
 
+                # Pattern detection logic
+                pattern = None
+                # Red bars are where Close < Open
+                red_bars = df[df['Close'] < df['Open']]
+
+                # Short Pattern Check
+                if not pattern and len(red_bars) >= 12:
+                    # Check wick constraint: High - Open <= 0.05
+                    # This checks if the upper wick is small for red bars
+                    wick_check = (red_bars['High'] - red_bars['Open']) <= 0.051
+                    if wick_check.all():
+                        pattern = "Short"
+
                 results.append({
                     'ticker': raw_ticker,
                     'yf_symbol': yf_ticker,
@@ -70,7 +83,8 @@ def fetch_and_process(tickers, progress_callback=None):
                     'min': round(low_min, 2),
                     'max': round(high_max, 2),
                     'current': round(df['Close'].iloc[-1], 2),
-                    'avg_daily_spread': round(avg_daily_spread, 3) 
+                    'avg_daily_spread': round(avg_daily_spread, 3),
+                    'pattern': pattern
                 })
             else:
                 logging.info(f"{yf_ticker} FAILED (Range {total_range:.2f} > 1.00 OR AvgSpread {avg_daily_spread:.3f} < 0.10)")

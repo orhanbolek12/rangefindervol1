@@ -323,6 +323,21 @@ JBK
             </p>
         </div>
 
+        <!-- Imbalance Section -->
+        <div id="imbalanceSection" class="card" style="display:none;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+                <div>
+                    <h2 style="margin:0; font-size:1.5rem;">Imbalance Search</h2>
+                    <small id="imbalanceStatus" style="color:var(--text-muted)">Loading status...</small>
+                </div>
+                <button class="btn" onclick="refreshImbalance()"
+                    style="width:auto; padding:0.5rem 1rem; font-size:0.9rem;">Refresh Imbalance</button>
+            </div>
+            <p style="color:var(--text-muted); margin-bottom:1rem;">
+                Analyzes 20d candles for Long/Short imbalance patterns (Wick &le; 0.05).
+            </p>
+        </div>
+
         <div class="card" id="resultsCard" style="display:none;">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
                 <h2 style="margin:0;">Results</h2>
