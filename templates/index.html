@@ -74,6 +74,7 @@
             letter-spacing: -1px;
             background: linear-gradient(135deg, #fff 40%, rgba(255, 255, 255, 0.5));
             -webkit-background-clip: text;
+            background-clip: text;
             -webkit-text-fill-color: transparent;
         }
 
@@ -426,11 +427,15 @@
                             <span id="prefsStatus">Syncing...</span>
                         </div>
                     </div>
-                    <button class="btn-outline" onclick="refreshPrefs()">Force Sync</button>
+                    <div style="display:flex; gap:0.5rem;">
+                        <button id="stopPrefsBtn" class="btn-outline"
+                            style="border-color:var(--error); color:var(--error);" onclick="stopPrefs()" disabled>Stop
+                            Scan</button>
+                        <button class="btn-outline" onclick="refreshPrefs()">Force Sync</button>
+                    </div>
                 </div>
                 <p style="color:var(--text-secondary); font-size: 0.9rem;">
-                    Automated daily screening (16:20 TR) for low-volatility preferred stocks matching $1.00 total range
-                    criteria.
+                    Automated daily screening for low-volatility preferred stocks matching $1.00 total range criteria.
                 </p>
             </section>
 
@@ -444,7 +449,64 @@
                             <span id="imbalanceStatus">Awaiting Trigger...</span>
                         </div>
                     </div>
-                    <button class="btn-outline" onclick="refreshImbalance()">Recalculate AI</button>
+                    <div style="display:flex; gap:0.5rem;">
+                        <button id="stopImbalanceBtn" class="btn-outline"
+                            style="border-color:var(--error); color:var(--error);" onclick="stopImbalance()"
+                            disabled>Stop Scan</button>
+                        <button class="btn-outline" onclick="refreshImbalance()">Recalculate AI</button>
+                    </div>
+                </div>
+
+                <!-- Advanced Settings -->
+                <div
+                    style="margin-top:2rem; margin-bottom:2rem; border-top:1px solid var(--glass-border); padding-top:2rem;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem; cursor:pointer;"
+                        onclick="toggleAdvancedSettings()">
+                        <label
+                            style="font-size:0.85rem; font-weight:700; color:var(--text-secondary); text-transform:uppercase; margin:0;">
+                            <span id="advancedToggle">▼</span> Advanced Settings
+                        </label>
+                        <button type="button" class="btn-outline" style="padding:0.4rem 0.8rem; font-size:0.8rem;"
+                            onclick="event.stopPropagation(); resetImbalanceDefaults()">Reset Defaults</button>
+                    </div>
+                    <div id="advancedSettings"
+                        style="display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin-top:1rem;">
+                        <div>
+                            <label
+                                style="display:block; font-size:0.8rem; color:var(--text-secondary); margin-bottom:0.3rem;">Days
+                                to Analyze</label>
+                            <input type="number" id="imbDays" value="20" min="5" max="90"
+                                style="width:100%; padding:0.6rem; background:rgba(0,0,0,0.2); border:1px solid var(--glass-border); border-radius:8px; color:white; font-size:0.9rem;">
+                        </div>
+                        <div>
+                            <label
+                                style="display:block; font-size:0.8rem; color:var(--text-secondary); margin-bottom:0.3rem;">Min
+                                Green Bars (Long)</label>
+                            <input type="number" id="imbMinGreen" value="12" min="1" max="50"
+                                style="width:100%; padding:0.6rem; background:rgba(0,0,0,0.2); border:1px solid var(--glass-border); border-radius:8px; color:white; font-size:0.9rem;">
+                        </div>
+                        <div>
+                            <label
+                                style="display:block; font-size:0.8rem; color:var(--text-secondary); margin-bottom:0.3rem;">Min
+                                Red Bars (Short)</label>
+                            <input type="number" id="imbMinRed" value="12" min="1" max="50"
+                                style="width:100%; padding:0.6rem; background:rgba(0,0,0,0.2); border:1px solid var(--glass-border); border-radius:8px; color:white; font-size:0.9rem;">
+                        </div>
+                        <div>
+                            <label
+                                style="display:block; font-size:0.8rem; color:var(--text-secondary); margin-bottom:0.3rem;">Long
+                                Wick Size (Open-Low)</label>
+                            <input type="number" id="imbLongWick" value="0.05" min="0.01" max="1" step="0.01"
+                                style="width:100%; padding:0.6rem; background:rgba(0,0,0,0.2); border:1px solid var(--glass-border); border-radius:8px; color:white; font-size:0.9rem;">
+                        </div>
+                        <div>
+                            <label
+                                style="display:block; font-size:0.8rem; color:var(--text-secondary); margin-bottom:0.3rem;">Short
+                                Wick Size (High-Open)</label>
+                            <input type="number" id="imbShortWick" value="0.05" min="0.01" max="1" step="0.01"
+                                style="width:100%; padding:0.6rem; background:rgba(0,0,0,0.2); border:1px solid var(--glass-border); border-radius:8px; color:white; font-size:0.9rem;">
+                        </div>
+                    </div>
                 </div>
 
                 <div
@@ -473,75 +535,162 @@
                 </div>
             </section>
 
-            <!-- Unified Results Area -->
-            <section id="resultsCard" class="glass-card" style="display:none;">
+            <!-- Custom Results Area -->
+            <section id="customResultsCard" class="glass-card" style="display:none;">
                 <div class="results-header">
                     <h3 class="results-title">Analysis Output</h3>
                     <div style="display:flex; align-items:center; gap:1.5rem;">
-                        <div id="foundLabel"
-                            style="display:none; font-weight:600; color:var(--text-secondary); font-size:0.9rem;">
-                            <span id="matchCount" class="badge-count">0</span> Matches
-                        </div>
-                        <button class="btn-outline" onclick="copyToClipboard()">Copy Symbols</button>
+                        <button class="btn-outline" onclick="copyToClipboard('custom')">Copy Symbols</button>
                     </div>
                 </div>
-
                 <div class="table-responsive">
-                    <table id="resultsTable">
+                    <table id="customResultsTable">
                         <thead>
-                            <tr id="tableHeaders">
-                                <!-- Headers injected -->
+                            <tr>
+                                <th>Ticker</th>
+                                <th>Low</th>
+                                <th>High</th>
+                                <th>Spread</th>
+                                <th>Intelligence</th>
                             </tr>
                         </thead>
-                        <tbody>
-                            <!-- Rows injected -->
-                        </tbody>
+                        <tbody></tbody>
                     </table>
                 </div>
+            </section>
 
-                <div id="noResults"
-                    style="display:none; text-align:center; padding:3rem 0; color:var(--text-secondary); font-style:italic;">
-                    No datasets matched the defined intelligence parameters.
+            <!-- Prefs Results Area -->
+            <section id="prefsResultsCard" class="glass-card" style="display:none;">
+                <div class="results-header">
+                    <h3 class="results-title">Smart Watchlist Matches</h3>
+                    <div style="display:flex; align-items:center; gap:1.5rem;">
+                        <span id="prefsMatchCount" class="badge-count">0 Matches</span>
+                        <button class="btn-outline" onclick="copyToClipboard('prefs')">Copy Symbols</button>
+                    </div>
+                </div>
+                <div class="table-responsive">
+                    <table id="prefsResultsTable">
+                        <thead>
+                            <tr>
+                                <th>Ticker</th>
+                                <th>Low</th>
+                                <th>High</th>
+                                <th>Spread</th>
+                                <th>Intelligence</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
                 </div>
             </section>
+
+            <!-- Imbalance Results Area -->
+            <section id="imbalanceResultsCard" class="glass-card" style="display:none;">
+                <div class="results-header">
+                    <h3 class="results-title">Imbalance AI Detections</h3>
+                    <div style="display:flex; align-items:center; gap:1.5rem;">
+                        <span id="imbMatchCount" class="badge-count">0 Matches</span>
+                        <button class="btn-outline" onclick="copyToClipboard('imbalance')">Copy Symbols</button>
+                    </div>
+                </div>
+                <div class="table-responsive">
+                    <table id="imbalanceResultsTable">
+                        <thead>
+                            <tr>
+                                <th>Ticker</th>
+                                <th>Pattern</th>
+                                <th>Green</th>
+                                <th>Red</th>
+                                <th>Intelligence</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- No Results Message -->
+            <div id="noResults"
+                style="display:none; text-align:center; padding:3rem 0; color:var(--text-secondary); font-style:italic;">
+                No datasets matched the defined intelligence parameters.
+            </div>
         </main>
     </div>
 
     <script>
         let jobId = null;
         let pollInterval = null;
-        let foundTickers = [];
+
+        // Track unique polling cycles to prevent zombies
+        let pollTimers = {
+            prefs: null,
+            imbalance: null
+        };
+
+        let dataStore = {
+            custom: [],
+            prefs: [],
+            imbalance: []
+        };
+
         let currentTab = 'custom';
 
         function switchTab(tab) {
+            if (tab === currentTab) return;
             currentTab = tab;
+            console.log("Switching to tab:", tab);
+
+            // UI Visual Update
             document.querySelectorAll('.tab-trigger').forEach(b => b.classList.remove('active'));
-            // Find current tab button and set active
             const btns = Array.from(document.querySelectorAll('.tab-trigger'));
-            const target = btns.find(b => b.innerText.toLowerCase().includes(tab.split(' ')[0].toLowerCase()));
+            const target = btns.find(b => {
+                const text = b.innerText.toLowerCase();
+                if (tab === 'custom') return text.includes('custom');
+                if (tab === 'prefs') return text.includes('smart');
+                if (tab === 'imbalance') return text.includes('imbalance');
+                return false;
+            });
             if (target) target.classList.add('active');
 
-            // Sections toggle
-            document.getElementById('customSection').style.display = 'none';
-            document.getElementById('prefsSection').style.display = 'none';
-            document.getElementById('imbalanceSection').style.display = 'none';
-            document.getElementById('resultsCard').style.display = 'none';
+            // Hide sections and result cards
+            ['custom', 'prefs', 'imbalance'].forEach(t => {
+                document.getElementById(`${t}Section`).style.display = 'none';
+                document.getElementById(`${t}ResultsCard`).style.display = 'none';
+            });
+            document.getElementById('noResults').style.display = 'none';
 
             if (tab === 'custom') {
                 document.getElementById('customSection').style.display = 'block';
+                if (dataStore.custom.length > 0) {
+                    renderResults('custom', dataStore.custom);
+                }
             } else if (tab === 'prefs') {
                 document.getElementById('prefsSection').style.display = 'block';
+                if (dataStore.prefs.length > 0) {
+                    renderResults('prefs', dataStore.prefs);
+                }
                 loadPrefs();
             } else if (tab === 'imbalance') {
                 document.getElementById('imbalanceSection').style.display = 'block';
+                if (dataStore.imbalance.length > 0) {
+                    renderResults('imbalance', dataStore.imbalance);
+                }
                 loadImbalance();
             }
         }
 
         async function loadPrefs() {
+            if (currentTab !== 'prefs') return;
+
+            // Clear any existing timer for this tab to prevent duplicates
+            if (pollTimers.prefs) clearTimeout(pollTimers.prefs);
+
             try {
                 const response = await fetch('/prefs');
                 const data = await response.json();
+
+                if (currentTab !== 'prefs') return;
+
                 const statusEl = document.getElementById('prefsStatus');
                 const dot = document.getElementById('prefsDot');
 
@@ -549,16 +698,14 @@
                     dot.className = 'status-dot processing';
                     const percent = data.total > 0 ? Math.round((data.progress / data.total) * 100) : 0;
                     statusEl.innerText = `Analyzing Market... ${percent}%`;
-                    if (data.results && data.results.length > 0) {
-                        foundTickers = data.results.map(r => r.ticker).sort();
-                        displayResults(data.results);
-                    }
-                    setTimeout(loadPrefs, 3000);
+                    document.getElementById('stopPrefsBtn').disabled = false;
+                    renderResults('prefs', data.results);
+                    pollTimers.prefs = setTimeout(loadPrefs, 3000);
                 } else {
                     dot.className = 'status-dot';
                     statusEl.innerText = data.last_updated ? `Last Updated: ${data.last_updated}` : 'Ready';
-                    foundTickers = data.results.map(r => r.ticker).sort();
-                    displayResults(data.results);
+                    document.getElementById('stopPrefsBtn').disabled = true;
+                    renderResults('prefs', data.results);
                 }
             } catch (e) { console.error(e); }
         }
@@ -568,10 +715,21 @@
             loadPrefs();
         }
 
+        async function stopPrefs() {
+            await fetch('/stop_prefs', { method: 'POST' });
+            loadPrefs();
+        }
+
         async function loadImbalance() {
+            if (currentTab !== 'imbalance') return;
+            if (pollTimers.imbalance) clearTimeout(pollTimers.imbalance);
+
             try {
                 const response = await fetch('/imbalance');
                 const data = await response.json();
+
+                if (currentTab !== 'imbalance') return;
+
                 const statusEl = document.getElementById('imbalanceStatus');
                 const dot = document.getElementById('imbalanceDot');
 
@@ -579,22 +737,52 @@
                     dot.className = 'status-dot processing';
                     const percent = data.total > 0 ? Math.round((data.progress / data.total) * 100) : 0;
                     statusEl.innerText = `Pattern Recognition... ${percent}%`;
-                    if (data.results && data.results.length > 0) {
-                        foundTickers = data.results.map(r => r.ticker).sort();
-                        displayResults(data.results, true);
-                    }
-                    setTimeout(loadImbalance, 3000);
+                    document.getElementById('stopImbalanceBtn').disabled = false;
+                    renderResults('imbalance', data.results);
+                    pollTimers.imbalance = setTimeout(loadImbalance, 3000);
                 } else {
                     dot.className = 'status-dot';
-                    statusEl.innerText = data.last_updated ? `Sync Complete: ${data.last_updated}` : 'Operational';
-                    foundTickers = data.results.map(r => r.ticker).sort();
-                    displayResults(data.results, true);
+                    statusEl.innerText = data.last_updated ? `Last Updated: ${data.last_updated}` : 'Operational';
+                    document.getElementById('stopImbalanceBtn').disabled = true;
+                    renderResults('imbalance', data.results);
                 }
             } catch (e) { console.error(e); }
         }
 
         async function refreshImbalance() {
-            await fetch('/refresh_imbalance', { method: 'POST' });
+            const formData = new FormData();
+            formData.append('days', document.getElementById('imbDays').value);
+            formData.append('min_green_bars', document.getElementById('imbMinGreen').value);
+            formData.append('min_red_bars', document.getElementById('imbMinRed').value);
+            formData.append('long_wick_size', document.getElementById('imbLongWick').value);
+            formData.append('short_wick_size', document.getElementById('imbShortWick').value);
+
+            await fetch('/refresh_imbalance', { method: 'POST', body: formData });
+            loadImbalance();
+        }
+
+        function toggleAdvancedSettings() {
+            const settings = document.getElementById('advancedSettings');
+            const toggle = document.getElementById('advancedToggle');
+            if (settings.style.display === 'none') {
+                settings.style.display = 'grid';
+                toggle.innerText = '▼';
+            } else {
+                settings.style.display = 'none';
+                toggle.innerText = '▶';
+            }
+        }
+
+        function resetImbalanceDefaults() {
+            document.getElementById('imbDays').value = 20;
+            document.getElementById('imbMinGreen').value = 12;
+            document.getElementById('imbMinRed').value = 12;
+            document.getElementById('imbLongWick').value = 0.05;
+            document.getElementById('imbShortWick').value = 0.05;
+        }
+
+        async function stopImbalance() {
+            await fetch('/stop_imbalance', { method: 'POST' });
             loadImbalance();
         }
 
@@ -606,8 +794,9 @@
             document.getElementById('analyzeBtn').disabled = true;
             document.getElementById('analyzeBtn').innerText = "Processing Data...";
             document.getElementById('progressContainer').style.display = 'block';
-            document.getElementById('resultsCard').style.display = 'none';
-            document.querySelector('#resultsTable tbody').innerHTML = '';
+            document.getElementById('customResultsCard').style.display = 'none'; // Hide custom results card
+            document.querySelector('#customResultsTable tbody').innerHTML = ''; // Clear custom table
+            document.getElementById('noResults').style.display = 'none'; // Hide no results message
             updateProgress(0, "Initiating Handshake...");
 
             try {
@@ -616,12 +805,13 @@
                 const res = await fetch('/find', { method: 'POST', body: formData });
                 const data = await res.json();
                 jobId = data.job_id;
+                if (pollInterval) clearInterval(pollInterval);
                 pollInterval = setInterval(pollStatus, 2000);
             } catch (e) { alert("Security Error: " + e.message); resetUI(); }
         }
 
         async function pollStatus() {
-            if (!jobId) return;
+            if (!jobId || currentTab !== 'custom') return;
             try {
                 const res = await fetch(`/status/${jobId}`);
                 const job = await res.json();
@@ -629,12 +819,13 @@
                 if (job.status === 'processing') {
                     const percent = Math.round((job.progress / job.total) * 100);
                     updateProgress(percent, `Analyzed ${job.progress}/${job.total} Nodes`);
+                    if (job.results && job.results.length > 0) renderResults('custom', job.results);
                 } else if (job.status === 'completed') {
                     clearInterval(pollInterval);
                     updateProgress(100, "Verification Complete");
-                    foundTickers = job.results.map(r => r.ticker).sort();
-                    displayResults(job.results);
+                    renderResults('custom', job.results);
                     resetUI();
+                    jobId = null;
                 }
             } catch (e) { console.error(e); }
         }
@@ -653,21 +844,30 @@
             document.getElementById('analyzeImbalanceBtn').disabled = true;
             document.getElementById('analyzeImbalanceBtn').innerText = "AI Scan Running...";
             document.getElementById('imbProgressContainer').style.display = 'block';
-            document.getElementById('resultsCard').style.display = 'none';
+            document.getElementById('imbalanceResultsCard').style.display = 'none';
+            document.querySelector('#imbalanceResultsTable tbody').innerHTML = '';
+            document.getElementById('noResults').style.display = 'none';
             updateImbProgress(0, "Deploying AI Models...");
 
             try {
                 const formData = new FormData();
                 formData.append('tickers', tickers);
+                formData.append('days', document.getElementById('imbDays').value);
+                formData.append('min_green_bars', document.getElementById('imbMinGreen').value);
+                formData.append('min_red_bars', document.getElementById('imbMinRed').value);
+                formData.append('long_wick_size', document.getElementById('imbLongWick').value);
+                formData.append('short_wick_size', document.getElementById('imbShortWick').value);
+
                 const res = await fetch('/find_imbalance', { method: 'POST', body: formData });
                 const data = await res.json();
                 jobId = data.job_id;
+                if (pollInterval) clearInterval(pollInterval);
                 pollInterval = setInterval(imbPollStatus, 2000);
             } catch (e) { alert("AI Error: " + e.message); resetUI(); }
         }
 
         async function imbPollStatus() {
-            if (!jobId) return;
+            if (!jobId || currentTab !== 'imbalance') return;
             try {
                 const res = await fetch(`/status/${jobId}`);
                 const job = await res.json();
@@ -675,12 +875,13 @@
                 if (job.status === 'processing') {
                     const percent = Math.round((job.progress / job.total) * 100);
                     updateImbProgress(percent, `Synthesizing ${job.progress}/${job.total} Data Points`);
+                    if (job.results && job.results.length > 0) renderResults('imbalance', job.results);
                 } else if (job.status === 'completed') {
                     clearInterval(pollInterval);
                     updateImbProgress(100, "Inference Completed");
-                    foundTickers = job.results.map(r => r.ticker).sort();
-                    displayResults(job.results, true);
+                    renderResults('imbalance', job.results);
                     resetUI();
+                    jobId = null;
                 }
             } catch (e) { console.error(e); }
         }
@@ -690,39 +891,49 @@
             document.getElementById('imbProgressPercent').innerText = percent + '%';
             document.getElementById('imbProgressText').innerText = text;
         }
+        function renderResults(type, results) {
+            if (!results) return;
 
-        function displayResults(results, isImbalance = false) {
-            document.getElementById('resultsCard').style.display = 'block';
-            const tbody = document.querySelector('#resultsTable tbody');
-            const hrow = document.getElementById('tableHeaders');
+            // Persistent storage check before UI filtering
+            if (results && results.length > 0) {
+                dataStore[type] = results;
+            }
+
+            // Update match count badges
+            const countId = type === 'prefs' ? 'prefsMatchCount' : (type === 'imbalance' ? 'imbMatchCount' : null);
+            if (countId) {
+                const countEl = document.getElementById(countId);
+                if (countEl) countEl.innerText = `${results.length} Matches`;
+            }
+
+            // ONLY update DOM if it's the current tab
+            if (currentTab !== type) return;
+
+            // CRITICAL: Hide ALL result cards before showing the one we want
+            // This prevents "leaking" results from other tabs
+            document.getElementById('customResultsCard').style.display = 'none';
+            document.getElementById('prefsResultsCard').style.display = 'none';
+            document.getElementById('imbalanceResultsCard').style.display = 'none';
+
+            const card = document.getElementById(`${type}ResultsCard`);
+            const tbody = document.querySelector(`#${type}ResultsTable tbody`);
             const noRes = document.getElementById('noResults');
-            const foundLab = document.getElementById('foundLabel');
 
-            tbody.innerHTML = '';
-
-            if (!results || results.length === 0) {
-                document.getElementById('resultsTable').style.display = 'none';
-                noRes.style.display = 'block';
-                foundLab.style.display = 'none';
+            if (results.length === 0) {
+                card.style.display = 'none';
+                if (currentTab === type) noRes.style.display = 'block';
                 return;
             }
 
-            document.getElementById('resultsTable').style.display = 'table';
+            card.style.display = 'block';
             noRes.style.display = 'none';
-            foundLab.style.display = 'block';
-            document.getElementById('matchCount').innerText = results.length;
-
-            if (isImbalance) {
-                hrow.innerHTML = `<th>Ticker</th><th>Pattern</th><th>Green</th><th>Red</th><th>Intelligence</th>`;
-            } else {
-                hrow.innerHTML = `<th>Ticker</th><th>Low</th><th>High</th><th>Spread</th><th>Intelligence</th>`;
-            }
+            tbody.innerHTML = '';
 
             results.sort((a, b) => a.ticker.localeCompare(b.ticker)).forEach(item => {
                 const tr = document.createElement('tr');
                 const tvUrl = `https://www.tradingview.com/chart/?symbol=${item.tv_symbol}`;
 
-                if (isImbalance) {
+                if (type === 'imbalance') {
                     tr.innerHTML = `
                         <td><span class="ticker-name">${item.ticker}</span>${item.is_new ? '<span class="new-indicator">New</span>' : ''}</td>
                         <td><span class="spread-val" style="background:${item.type === 'Long' ? 'rgba(16,185,129,0.1)' : 'rgba(239,68,68,0.1)'}; color:${item.type === 'Long' ? 'var(--success)' : 'var(--error)'}">${item.type}</span></td>
@@ -743,11 +954,12 @@
             });
         }
 
-        function copyToClipboard() {
-            if (foundTickers.length === 0) return;
-            const text = foundTickers.join(', ');
+        function copyToClipboard(type) {
+            const results = dataStore[type];
+            if (!results || results.length === 0) return;
+            const text = results.map(r => r.ticker).sort().join(', ');
             navigator.clipboard.writeText(text).then(() => {
-                const btn = document.querySelector('.btn-outline[onclick="copyToClipboard()"]');
+                const btn = document.querySelector(`#${type}ResultsCard .btn-outline`);
                 const oldText = btn.innerText;
                 btn.innerText = "Copied!";
                 setTimeout(() => btn.innerText = oldText, 2000);

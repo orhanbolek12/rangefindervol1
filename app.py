@@ -16,22 +16,26 @@ IMBALANCE_FILE = 'imbalance_history.json'
 
 # In-memory storage
 jobs = {}
-prefs_cache = {
-    'status': 'idle', # idle, processing, completed
-    'last_updated': None,
-    'last_updated_ts': 0,
-    'results': [],
-    'progress': 0,
-    'total': 0
-}
-
 imbalance_cache = {
     'status': 'idle',
     'last_updated': None,
     'last_updated_ts': 0,
     'results': [],
+    'baseline_tickers': [], # Tickers from the previous day's final run
     'progress': 0,
-    'total': 0
+    'total': 0,
+    'stop_requested': False
+}
+
+prefs_cache = {
+    'status': 'idle',
+    'last_updated': None,
+    'last_updated_ts': 0,
+    'results': [],
+    'baseline_tickers': [], # Tickers from the previous day's final run
+    'progress': 0,
+    'total': 0,
+    'stop_requested': False
 }
 
 def load_history():
@@ -44,7 +48,9 @@ def load_history():
                 prefs_cache['results'] = data.get('results', [])
                 prefs_cache['last_updated'] = data.get('last_updated')
                 prefs_cache['last_updated_ts'] = data.get('last_updated_ts', 0)
-                prefs_cache['status'] = 'completed'
+                prefs_cache['baseline_tickers'] = data.get('baseline_tickers', [])
+                if prefs_cache['results']:
+                    prefs_cache['status'] = 'completed'
                 print(f"Loaded {len(prefs_cache['results'])} prefs results from history.")
         except Exception as e:
             print(f"Error loading history: {e}")
@@ -57,7 +63,10 @@ def load_history():
                 imbalance_cache['results'] = data.get('results', [])
                 imbalance_cache['last_updated'] = data.get('last_updated')
                 imbalance_cache['last_updated_ts'] = data.get('last_updated_ts', 0)
-                imbalance_cache['status'] = 'completed'
+                imbalance_cache['baseline_tickers'] = data.get('baseline_tickers', [])
+                # If we have results, mark as completed so the UI can show them
+                if imbalance_cache['results']:
+                    imbalance_cache['status'] = 'completed'
                 print(f"Loaded {len(imbalance_cache['results'])} imbalance results from history.")
         except Exception as e:
             print(f"Error loading imbalance history: {e}")
@@ -68,7 +77,8 @@ def save_history(target='all'):
             data = {
                 'results': prefs_cache['results'],
                 'last_updated': prefs_cache['last_updated'],
-                'last_updated_ts': prefs_cache['last_updated_ts']
+                'last_updated_ts': prefs_cache['last_updated_ts'],
+                'baseline_tickers': prefs_cache['baseline_tickers']
             }
             with open(HISTORY_FILE, 'w') as f:
                 json.dump(data, f)
@@ -77,7 +87,8 @@ def save_history(target='all'):
             data = {
                 'results': imbalance_cache['results'],
                 'last_updated': imbalance_cache['last_updated'],
-                'last_updated_ts': imbalance_cache['last_updated_ts']
+                'last_updated_ts': imbalance_cache['last_updated_ts'],
+                'baseline_tickers': imbalance_cache['baseline_tickers']
             }
             with open(IMBALANCE_FILE, 'w') as f:
                 json.dump(data, f)
@@ -89,29 +100,6 @@ def get_tr_time():
     # TR is UTC+3
     return datetime.now(timezone(timedelta(hours=3)))
 
-def scheduler_loop():
-    """Background loop to check for 16:20 TR daily trigger"""
-    while True:
-        try:
-            now = get_tr_time()
-            target_time = now.replace(hour=16, minute=20, second=0, microsecond=0)
-            
-            # Check Prefs
-            last_run_prefs = datetime.fromtimestamp(prefs_cache['last_updated_ts'], tz=timezone(timedelta(hours=3)))
-            if now >= target_time and last_run_prefs.date() < now.date() and prefs_cache['status'] != 'processing':
-                print(f"[{now}] Scheduler triggering daily Prefs analysis...")
-                threading.Thread(target=load_and_analyze_prefs, args=(True,), daemon=True).start()
-            
-            # Check Imbalance
-            last_run_imb = datetime.fromtimestamp(imbalance_cache['last_updated_ts'], tz=timezone(timedelta(hours=3)))
-            if now >= target_time and last_run_imb.date() < now.date() and imbalance_cache['status'] != 'processing':
-                print(f"[{now}] Scheduler triggering daily Imbalance analysis...")
-                threading.Thread(target=load_and_analyze_imbalance, args=(True,), daemon=True).start()
-                
-        except Exception as e:
-            print(f"Error in scheduler loop: {e}")
-            
-        time.sleep(60)
 
 def load_and_analyze_prefs(force=False):
     """Background task to analyze the big list from tickers.txt"""
@@ -125,10 +113,19 @@ def load_and_analyze_prefs(force=False):
 
     prefs_cache['status'] = 'processing'
     prefs_cache['progress'] = 0
+    prefs_cache['stop_requested'] = False
     
     try:
-        # Keep track of old tickers to mark "NEW"
-        old_tickers = {r['ticker'] for r in prefs_cache['results']}
+        def progress_wrapper(c, t):
+            prefs_cache.update({'progress': c})
+            return 'STOP' if prefs_cache.get('stop_requested') else None
+        now_tr = get_tr_time()
+        last_run_tr = datetime.fromtimestamp(prefs_cache['last_updated_ts'], tz=timezone(timedelta(hours=3)))
+        
+        # Baseline is the set of tickers from the LAST completed scan
+        # This is loaded from history and will be updated after this scan completes
+        
+        baseline = set(prefs_cache['baseline_tickers'])
         
         with open('tickers.txt', 'r') as f:
             content = f.read()
@@ -138,16 +135,26 @@ def load_and_analyze_prefs(force=False):
         prefs_cache['total'] = len(unique_tickers)
         
         # Run logic
-        new_results = fetch_and_process(unique_tickers, progress_callback=lambda c, t: prefs_cache.update({'progress': c}))
+        new_results = fetch_and_process(unique_tickers, progress_callback=progress_wrapper)
         
-        # Mark "NEW" tickers
+        if prefs_cache.get('stop_requested'):
+            print("Prefs Analysis STOPPED by user.")
+            prefs_cache['status'] = 'completed' if prefs_cache['results'] else 'idle'
+            return
+        
+        # Mark "NEW" tickers based on the baseline (yesterday's set)
+        # We also want to make sure the result itself persists that it is new
         for res in new_results:
-            res['is_new'] = res['ticker'] not in old_tickers
+            is_new = res['ticker'] not in baseline
+            res['is_new'] = is_new
         
+        # Update cache with new results
+        # Set current results as baseline for NEXT scan (so they won't show as "new" next time)
         prefs_cache.update({
             'results': new_results,
+            'baseline_tickers': [r['ticker'] for r in new_results],
             'status': 'completed',
-            'last_updated': get_tr_time().strftime("%Y-%m-%d %H:%M:%S TR"),
+            'last_updated': now_tr.strftime("%Y-%m-%d %H:%M:%S TR"),
             'last_updated_ts': now_ts
         })
         
@@ -158,7 +165,7 @@ def load_and_analyze_prefs(force=False):
         print(f"Error in background prefs analysis: {e}")
         prefs_cache['status'] = 'error'
 
-def load_and_analyze_imbalance(force=False):
+def load_and_analyze_imbalance(force=False, days=20, min_green_bars=12, min_red_bars=12, long_wick=0.05, short_wick=0.05):
     global imbalance_cache
     now_ts = time.time()
     if not force and (now_ts - imbalance_cache['last_updated_ts'] < 86400) and imbalance_cache['results']:
@@ -167,22 +174,45 @@ def load_and_analyze_imbalance(force=False):
 
     imbalance_cache['status'] = 'processing'
     imbalance_cache['progress'] = 0
+    imbalance_cache['stop_requested'] = False
     try:
-        old_tickers = {r['ticker'] for r in imbalance_cache['results']}
+        def progress_wrapper(c, t):
+            imbalance_cache.update({'progress': c})
+            return 'STOP' if imbalance_cache.get('stop_requested') else None
+        now_tr = get_tr_time()
+        # Baseline is loaded from history and represents the last completed scan
+            
+        baseline = set(imbalance_cache['baseline_tickers'])
+        
         with open('tickers.txt', 'r') as f:
             content = f.read()
         tickers = [t.strip() for t in content.replace('\n', ',').split(',') if t.strip()]
         unique_tickers = list(set(tickers))
         imbalance_cache['total'] = len(unique_tickers)
         
-        new_results = fetch_imbalance(unique_tickers, progress_callback=lambda c, t: imbalance_cache.update({'progress': c}))
+        new_results = fetch_imbalance(unique_tickers, 
+                                      days=days,
+                                      min_green_bars=min_green_bars,
+                                      min_red_bars=min_red_bars,
+                                      long_wick_size=long_wick,
+                                      short_wick_size=short_wick,
+                                      progress_callback=progress_wrapper)
+        
+        if imbalance_cache.get('stop_requested'):
+            print("Imbalance Analysis STOPPED by user.")
+            imbalance_cache['status'] = 'completed' if imbalance_cache['results'] else 'idle'
+            return
+        
         for res in new_results:
-            res['is_new'] = res['ticker'] not in old_tickers
+            is_new = res['ticker'] not in baseline
+            res['is_new'] = is_new
             
+        # Update cache and set current results as baseline for next scan
         imbalance_cache.update({
             'results': new_results,
+            'baseline_tickers': [r['ticker'] for r in new_results],
             'status': 'completed',
-            'last_updated': get_tr_time().strftime("%Y-%m-%d %H:%M:%S TR"),
+            'last_updated': now_tr.strftime("%Y-%m-%d %H:%M:%S TR"),
             'last_updated_ts': now_ts
         })
         save_history('imbalance')
@@ -191,14 +221,10 @@ def load_and_analyze_imbalance(force=False):
         print(f"Error in imbalance analysis: {e}")
         imbalance_cache['status'] = 'error'
 
-# Startup
+# Startup - Load history only, no auto-scan
 load_history()
-if not prefs_cache['results']:
-    threading.Thread(target=load_and_analyze_prefs, args=(True,), daemon=True).start()
-if not imbalance_cache['results']:
-    threading.Thread(target=load_and_analyze_imbalance, args=(True,), daemon=True).start()
+print("App started. Use 'Force Sync' or 'Recalculate AI' to run analysis.")
 
-threading.Thread(target=scheduler_loop, daemon=True).start()
 
 @app.route('/')
 def index():
@@ -225,8 +251,27 @@ def refresh_imbalance():
     if imbalance_cache['status'] == 'processing':
         return jsonify({'status': 'processing', 'message': 'Imbalance analysis already running'})
     
-    threading.Thread(target=load_and_analyze_imbalance, args=(True,), daemon=True).start()
+    # Get parameters from request
+    days = int(request.form.get('days', 20))
+    min_green = int(request.form.get('min_green_bars', 12))
+    min_red = int(request.form.get('min_red_bars', 12))
+    long_wick = float(request.form.get('long_wick_size', 0.05))
+    short_wick = float(request.form.get('short_wick_size', 0.05))
+    
+    threading.Thread(target=load_and_analyze_imbalance, 
+                    args=(True, days, min_green, min_red, long_wick, short_wick), 
+                    daemon=True).start()
     return jsonify({'status': 'started'})
+
+@app.route('/stop_prefs', methods=['POST'])
+def stop_prefs():
+    prefs_cache['stop_requested'] = True
+    return jsonify({'status': 'stopping'})
+
+@app.route('/stop_imbalance', methods=['POST'])
+def stop_imbalance():
+    imbalance_cache['stop_requested'] = True
+    return jsonify({'status': 'stopping'})
 
 @app.route('/find', methods=['POST'])
 def find_spreads():
@@ -251,6 +296,12 @@ def process_job(job_id, tickers):
         jobs[job_id]['progress'] = current
         
     results = fetch_and_process(tickers, progress_callback=update_progress)
+    
+    # Mark NEW for manual jobs too, relative to today's baseline
+    baseline = set(prefs_cache.get('baseline_tickers', []))
+    for res in results:
+        res['is_new'] = res['ticker'] not in baseline
+        
     jobs[job_id]['results'] = results
     jobs[job_id]['status'] = 'completed'
 
@@ -277,8 +328,26 @@ def find_imbalance():
     
     tickers = [t.strip() for t in raw_text.replace('\n', ',').split(',') if t.strip()]
     
+    # Get parameters from request
+    days = int(request.form.get('days', 20))
+    min_green = int(request.form.get('min_green_bars', 12))
+    min_red = int(request.form.get('min_red_bars', 12))
+    long_wick = float(request.form.get('long_wick_size', 0.05))
+    short_wick = float(request.form.get('short_wick_size', 0.05))
+    
     job_id = str(uuid.uuid4())
-    jobs[job_id] = {'status': 'processing', 'progress': 0, 'total': len(tickers), 'results': [], 'type': 'imbalance'}
+    jobs[job_id] = {
+        'status': 'processing', 
+        'progress': 0, 
+        'total': len(tickers), 
+        'results': [], 
+        'type': 'imbalance',
+        'days': days,
+        'min_green_bars': min_green,
+        'min_red_bars': min_red,
+        'long_wick_size': long_wick,
+        'short_wick_size': short_wick
+    }
     
     thread = threading.Thread(target=process_imbalance_job, args=(job_id, tickers))
     thread.start()
@@ -288,8 +357,28 @@ def find_imbalance():
 def process_imbalance_job(job_id, tickers):
     def update_progress(current, total):
         jobs[job_id]['progress'] = current
+    
+    # Get parameters from job metadata
+    job_data = jobs[job_id]
+    days = job_data.get('days', 20)
+    min_green = job_data.get('min_green_bars', 12)
+    min_red = job_data.get('min_red_bars', 12)
+    long_wick = job_data.get('long_wick_size', 0.05)
+    short_wick = job_data.get('short_wick_size', 0.05)
         
-    results = fetch_imbalance(tickers, progress_callback=update_progress)
+    results = fetch_imbalance(tickers, 
+                             days=days,
+                             min_green_bars=min_green,
+                             min_red_bars=min_red,
+                             long_wick_size=long_wick,
+                             short_wick_size=short_wick,
+                             progress_callback=update_progress)
+    
+    # NEW logic for manual imbalance search
+    baseline = set(imbalance_cache.get('baseline_tickers', []))
+    for res in results:
+        res['is_new'] = res['ticker'] not in baseline
+        
     jobs[job_id]['results'] = results
     jobs[job_id]['status'] = 'completed'
 

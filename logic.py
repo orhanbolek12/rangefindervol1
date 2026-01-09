@@ -93,7 +93,9 @@ def fetch_and_process(tickers, progress_callback=None):
             logging.error(f"Error processing {raw_ticker}: {e}")
         
         if progress_callback:
-            progress_callback(i + 1, total)
+            if progress_callback(i + 1, total) == 'STOP':
+                logging.info(f"Stop signal received. Aborting fetch_and_process.")
+                break
             
     return results
 
@@ -109,18 +111,31 @@ def parse_ticker_tv(raw_ticker):
             return f"{base}/P{suffix}"
     return raw_ticker
 
-def fetch_imbalance(tickers, progress_callback=None):
+def fetch_imbalance(tickers, 
+                   days=20, 
+                   min_green_bars=12, 
+                   min_red_bars=12,
+                   long_wick_size=0.05,
+                   short_wick_size=0.05,
+                   progress_callback=None):
     """
     Analyzes tickers for Imbalance patterns (Long/Short).
-    Long: >= 12 green bars in last 20, for green bars Open-Low <= 0.05
-    Short: >= 12 red bars in last 20, for red bars High-Open <= 0.05
+    
+    Parameters:
+    - days: Number of days to analyze (default: 20)
+    - min_green_bars: Minimum green bars required for Long pattern (default: 12)
+    - min_red_bars: Minimum red bars required for Short pattern (default: 12)
+    - long_wick_size: Max wick size (Open-Low) for Long pattern (default: 0.05)
+    - short_wick_size: Max wick size (High-Open) for Short pattern (default: 0.05)
     """
     results = []
     total = len(tickers)
     
     for i, raw_ticker in enumerate(tickers):
         if progress_callback:
-            progress_callback(i + 1, total)
+            if progress_callback(i + 1, total) == 'STOP':
+                logging.info(f"Stop signal received. Aborting fetch_imbalance.")
+                break
             
         yf_symbol = parse_ticker_yf(raw_ticker)
         tv_symbol = parse_ticker_tv(raw_ticker)
@@ -132,24 +147,24 @@ def fetch_imbalance(tickers, progress_callback=None):
             if df.empty or len(df) < 15: 
                 continue
                 
-            df = df.tail(20).copy()
+            df = df.tail(days).copy()
             
             green_bars = df[df['Close'] > df['Open']]
             red_bars = df[df['Close'] < df['Open']]
             
             pattern = None
             
-            # Long Pattern Check: >= 12 green, wicks <= 0.05
-            if len(green_bars) >= 12:
+            # Long Pattern Check: >= min_green_bars, wicks <= long_wick_size
+            if len(green_bars) >= min_green_bars:
                 # Open - Low should be small for green bars
-                wick_check = (green_bars['Open'] - green_bars['Low']) <= 0.051
+                wick_check = (green_bars['Open'] - green_bars['Low']) <= long_wick_size + 0.001
                 if wick_check.all():
                     pattern = "Long"
             
-            # Short Pattern Check: >= 12 red, wicks <= 0.05
-            if not pattern and len(red_bars) >= 12:
+            # Short Pattern Check: >= min_red_bars, wicks <= short_wick_size
+            if not pattern and len(red_bars) >= min_red_bars:
                 # High - Open should be small for red bars
-                wick_check = (red_bars['High'] - red_bars['Open']) <= 0.051
+                wick_check = (red_bars['High'] - red_bars['Open']) <= short_wick_size + 0.001
                 if wick_check.all():
                     pattern = "Short"
             
