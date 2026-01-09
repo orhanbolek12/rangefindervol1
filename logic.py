@@ -120,113 +120,124 @@ def fetch_imbalance(tickers,
                    progress_callback=None):
     """
     Analyzes tickers for Imbalance patterns (Long/Short).
-    Optimized to use parallel downloading.
+    Optimized to use parallel downloading in CHUNKS to allow progress updates.
     """
     results = []
     total = len(tickers)
     
     # Map raw tickers to YF tickers
-    # Store mapping to retrieve original ticker later
     ticker_map = {parse_ticker_yf(t): t for t in tickers}
-    yf_tickers = list(ticker_map.keys())
+    all_yf_tickers = list(ticker_map.keys())
     
-    if not yf_tickers:
+    if not all_yf_tickers:
         return []
 
-    try:
-        # Batch download for speed
-        # use 'threads=True' for parallel fetching
-        logging.info(f"Starting batch download for {len(yf_tickers)} tickers...")
+    CHUNK_SIZE = 50
+    processed_count = 0
+
+    for i in range(0, len(all_yf_tickers), CHUNK_SIZE):
+        chunk = all_yf_tickers[i:i + CHUNK_SIZE]
         
-        # We fetch slightly more data than 'days' to ensure we have enough valid trading days
-        # '3mo' is safe buffer for 20-40 day analysis
-        data = yf.download(yf_tickers, period="3mo", interval="1d", group_by='ticker', threads=True, progress=False)
-        
-        logging.info("Batch download complete. Processing data...")
-        
-        # Handle single ticker case (data structure is different)
-        if len(yf_tickers) == 1:
-            # Reformat to match multi-ticker structure for consistent loop
-            # Create a MultiIndex-like structure or just process directly
-            single_ticker = yf_tickers[0]
-            # If it's a single ticker, 'data' is just the DataFrame for that ticker
-            # We wrap it in a dict for the loop below
-            data_dict = {single_ticker: data}
-        else:
-            # Multi-ticker: data columns are (Ticker, Feature)
-            # Use stack(level=0) isn't always best.
-            # Best is to iterate through the unique level 0 columns
+        try:
+            # Batch download for this chunk
+            # 'threads=True' for parallel fetching within the chunk
+            data = yf.download(chunk, period="3mo", interval="1d", group_by='ticker', threads=True, progress=False)
+            
+            # Prepare data dict for processing
             data_dict = {}
-            # Accessing by column level 0
-            # Note: yfinance 0.2+ might behave differently, but typical group_by='ticker' gives top level ticker
-            for t in yf_tickers:
+            if len(chunk) == 1:
+                data_dict = {chunk[0]: data}
+            else:
+                for t in chunk:
+                    try:
+                        # Handle MultiIndex
+                        # Check if 'ticker' level exists or if it's flat
+                        if isinstance(data.columns, pd.MultiIndex):
+                            try:
+                                df_t = data.xs(t, axis=1, level=0, drop_level=True)
+                                data_dict[t] = df_t
+                            except KeyError:
+                                logging.warning(f"No data for {t} in chunk")
+                        else:
+                            # Fallback if structure is unexpected (shouldn't happen with group_by='ticker' and multiple tickers)
+                             logging.warning(f"Unexpected data structure for {t}")
+                    except Exception as e:
+                         logging.warning(f"Error extracing data for {t}: {e}")
+
+            # Process each ticker in the chunk
+            for yf_symbol in chunk:
+                processed_count += 1
+                
+                # Progress update
+                if progress_callback:
+                    if progress_callback(processed_count, total) == 'STOP':
+                        logging.info(f"Stop signal received.")
+                        return results # Return matches found so far
+
+                if yf_symbol not in data_dict:
+                    continue
+
+                df = data_dict[yf_symbol]
+                raw_ticker = ticker_map.get(yf_symbol, yf_symbol)
+                tv_symbol = parse_ticker_tv(raw_ticker)
+                
                 try:
-                    # xs is safe way to slice MultiIndex
-                    df_t = data.xs(t, axis=1, level=0, drop_level=True)
-                    data_dict[t] = df_t
-                except KeyError:
-                    logging.warning(f"No data found for {t} in batch download")
-                    continue
-
-        # Process each ticker
-        for i, (yf_symbol, df) in enumerate(data_dict.items()):
-            
-            # Progress update
-            if progress_callback:
-                if progress_callback(i + 1, total) == 'STOP':
-                    logging.info(f"Stop signal received. Aborting fetch_imbalance.")
-                    break
-            
-            raw_ticker = ticker_map.get(yf_symbol, yf_symbol)
-            tv_symbol = parse_ticker_tv(raw_ticker)
-            
-            try:
-                # Clean and validate
-                df = df.dropna(how='all') # Drop days where this ticker had no data
-                
-                if df.empty or len(df) < 15: 
-                    continue
+                    # Clean and validate
+                    df = df.dropna(how='all') 
                     
-                # Slice the requested days
-                df_slice = df.tail(days).copy()
-                
-                # Check for required columns (sometimes download fails partially)
-                if 'Close' not in df_slice.columns or 'Open' not in df_slice.columns:
-                    continue
-
-                green_bars = df_slice[df_slice['Close'] > df_slice['Open']]
-                red_bars = df_slice[df_slice['Close'] < df_slice['Open']]
-                
-                pattern = None
-                
-                # Long Pattern Check
-                if len(green_bars) >= min_green_bars:
-                    wick_check = (green_bars['Open'] - green_bars['Low']) <= long_wick_size + 0.001
-                    if wick_check.all():
+                    if df.empty or len(df) < 15: 
+                        continue
+                        
+                    # Slice the requested days
+                    df_slice = df.tail(days).copy()
+                    
+                    if 'Close' not in df_slice.columns or 'Open' not in df_slice.columns:
+                        continue
+                    
+                    # Logic Refinement based on User Request:
+                    # Long Pattern: Count of days where (Close > Open) AND (Open - Low <= long_wick) >= min_green
+                    # Short Pattern: Count of days where (Close < Open) AND (High - Open <= short_wick) >= min_red
+                    
+                    # 1. Identify Green Bars (Close > Open)
+                    # 2. Check Wick Condition (Open - Low <= long_wick)
+                    # 3. Valid Green Bars = Green & Wick OK
+                    
+                    # Vectorized checks
+                    is_green = df_slice['Close'] > df_slice['Open']
+                    long_wick_ok = (df_slice['Open'] - df_slice['Low']) <= (long_wick_size + 0.00001) # float tolerance
+                    valid_green_bars = df_slice[is_green & long_wick_ok]
+                    
+                    # 1. Identify Red Bars (Close < Open)
+                    # 2. Check Wick Condition (High - Open <= short_wick)
+                    # 3. Valid Red Bars = Red & Wick OK
+                    
+                    is_red = df_slice['Close'] < df_slice['Open']
+                    short_wick_ok = (df_slice['High'] - df_slice['Open']) <= (short_wick_size + 0.00001)
+                    valid_red_bars = df_slice[is_red & short_wick_ok]
+                    
+                    pattern = None
+                    
+                    # Check Counts
+                    if len(valid_green_bars) >= min_green_bars:
                         pattern = "Long"
-                
-                # Short Pattern Check
-                if not pattern and len(red_bars) >= min_red_bars:
-                    wick_check = (red_bars['High'] - red_bars['Open']) <= short_wick_size + 0.001
-                    if wick_check.all():
+                    elif len(valid_red_bars) >= min_red_bars:
                         pattern = "Short"
-                
-                if pattern:
-                    results.append({
-                        'ticker': raw_ticker,
-                        'type': pattern,
-                        'green_count': len(green_bars),
-                        'red_count': len(red_bars),
-                        'tv_symbol': tv_symbol,
-                        'yf_symbol': yf_symbol
-                    })
                     
-            except Exception as e:
-                logging.error(f"Error processing {raw_ticker}: {e}")
-                
-    except Exception as e:
-        logging.error(f"Critical error in batch fetch: {e}")
-        # Fallback to serial if batch fails completely?
-        # For now, just logging.
+                    if pattern:
+                        results.append({
+                            'ticker': raw_ticker,
+                            'type': pattern,
+                            'green_count': len(valid_green_bars), # Report valid count
+                            'red_count': len(valid_red_bars),     # Report valid count
+                            'tv_symbol': tv_symbol,
+                            'yf_symbol': yf_symbol
+                        })
+                        
+                except Exception as e:
+                    logging.error(f"Error processing {raw_ticker}: {e}")
+
+        except Exception as e:
+            logging.error(f"Error in chunk fetch: {e}")
+            continue
 
     return results
