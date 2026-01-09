@@ -1031,7 +1031,8 @@
             // This prevents "leaking" results from other tabs
             document.getElementById('customResultsCard').style.display = 'none';
             document.getElementById('prefsResultsCard').style.display = 'none';
-            document.getElementById('imbalanceResultsCard').style.display = 'none';
+            document.getElementById('imbalanceLongResultsCard').style.display = 'none';
+            document.getElementById('imbalanceShortResultsCard').style.display = 'none';
 
             const card = document.getElementById(`${type}ResultsCard`);
             const tbody = document.querySelector(`#${type}ResultsTable tbody`);
