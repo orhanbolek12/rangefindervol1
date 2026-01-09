@@ -135,6 +135,57 @@ def fetch_imbalance(tickers,
     CHUNK_SIZE = 10
     processed_count = 0
 
+    # OPTIMIZATION: If only 1 ticker, bypass batch download completely
+    # This prevents 'yf.download' overhead/hangs for simple requests
+    if len(all_yf_tickers) == 1:
+        yf_symbol = all_yf_tickers[0]
+        raw_ticker = ticker_map.get(yf_symbol, yf_symbol)
+        tv_symbol = parse_ticker_tv(raw_ticker)
+        
+        # Immediate progress update
+        if progress_callback: progress_callback(0, 1)
+
+        try:
+            logging.info(f"Single ticker mode for {yf_symbol}")
+            # Use specific Ticker history which is often more reliable for single items
+            df = yf.Ticker(yf_symbol).history(period="3mo", interval="1d", auto_adjust=True)
+            
+            if not df.empty and len(df) >= 15:
+                # Process single ticker result
+                df_slice = df.tail(days).copy()
+                
+                # ... reuse logic or call a helper? 
+                # For safety, I'll inline the core check to ensure it works identically
+                is_green = df_slice['Close'] > df_slice['Open']
+                long_wick_ok = (df_slice['Open'] - df_slice['Low']) <= (long_wick_size + 0.00001)
+                valid_green_bars = df_slice[is_green & long_wick_ok]
+                
+                is_red = df_slice['Close'] < df_slice['Open']
+                short_wick_ok = (df_slice['High'] - df_slice['Open']) <= (short_wick_size + 0.00001)
+                valid_red_bars = df_slice[is_red & short_wick_ok]
+                
+                pattern = None
+                if len(valid_green_bars) >= min_green_bars:
+                    pattern = "Long"
+                elif len(valid_red_bars) >= min_red_bars:
+                    pattern = "Short"
+                
+                if pattern:
+                    results.append({
+                        'ticker': raw_ticker,
+                        'type': pattern,
+                        'green_count': len(valid_green_bars),
+                        'red_count': len(valid_red_bars),
+                        'tv_symbol': tv_symbol,
+                        'yf_symbol': yf_symbol
+                    })
+            if progress_callback: progress_callback(1, 1)
+            return results
+        except Exception as e:
+            logging.error(f"Single ticker failed: {e}")
+            if progress_callback: progress_callback(1, 1)
+            return []
+
     for i in range(0, len(all_yf_tickers), CHUNK_SIZE):
         # Check Stop before starting a new heavy download
         if progress_callback:
