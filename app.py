@@ -409,20 +409,18 @@ def analyze_imbalance_batch():
     tickers = [t.strip() for t in tickers_str.split(',') if t.strip()]
     
     # Get parameters
-    days = int(request.form.get('days', 20))
-    min_green = int(request.form.get('min_green_bars', 12))
-    min_red = int(request.form.get('min_red_bars', 12))
-    long_wick = float(request.form.get('long_wick_size', 0.05))
-    short_wick = float(request.form.get('short_wick_size', 0.05))
+    days = int(request.form.get('days', 30))
+    min_count = int(request.form.get('min_count', 20))
+    candle_color = request.form.get('candle_color', 'Green') # 'Green' or 'Red'
+    max_wick = float(request.form.get('max_wick', 0.12))
     
     # Run analysis synchronously with error capture
     try:
         results = fetch_imbalance(tickers, 
                                  days=days,
-                                 min_green_bars=min_green,
-                                 min_red_bars=min_red,
-                                 long_wick_size=long_wick,
-                                 short_wick_size=short_wick)
+                                 min_count=min_count,
+                                 candle_color=candle_color,
+                                 max_wick=max_wick)
     except Exception as e:
         import traceback
         trace = traceback.format_exc()
@@ -434,8 +432,8 @@ def analyze_imbalance_batch():
     for res in results:
         res['is_new'] = res['ticker'] not in baseline
         res['days'] = days
-        res['long_wick'] = long_wick
-        res['short_wick'] = short_wick
+        res['min_count'] = min_count
+        res['max_wick'] = max_wick
         
     return jsonify({'results': results})
 

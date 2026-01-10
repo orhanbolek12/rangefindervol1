@@ -112,21 +112,27 @@ def parse_ticker_tv(raw_ticker):
     return raw_ticker
 
 def fetch_imbalance(tickers, 
-                   days=20, 
-                   min_green_bars=12, 
-                   min_red_bars=12,
-                   long_wick_size=0.05,
-                   short_wick_size=0.05,
+                   days=30, 
+                   min_count=20,
+                   candle_color='Green', # 'Green' or 'Red'
+                   max_wick=0.12,
                    progress_callback=None):
     """
-    Analyzes tickers for Imbalance patterns (Long/Short).
-    SEQUENTIAL PROCESSING: Fetches one by one to ensure reliability and correct data.
+    Unified Filter Logic:
+    Analyzes tickers to find specific candle patterns based on color and wick size.
+    
+    Logic:
+    1. Look at last 'days' candles.
+    2. Count how many candles match the target 'candle_color' AND have a wick <= 'max_wick'.
+       - For Green: Wick = Open - Low
+       - For Red: Wick = High - Open
+    3. If match_count >= min_count, return the ticker.
     """
     results = []
     total = len(tickers)
     
     for i, raw_ticker in enumerate(tickers):
-        # Progress check at start of loop
+        # Progress check
         if progress_callback:
             if progress_callback(i, total) == 'STOP':
                 logging.info(f"Stop signal received at {raw_ticker}.")
@@ -136,18 +142,17 @@ def fetch_imbalance(tickers,
         tv_symbol = parse_ticker_tv(raw_ticker)
         
         try:
-            # Fetch data using Ticker().history()
-            # auto_adjust=True ensures we get split/dividend adjusted prices (comparable to TV adj close)
+            # Fetch data 
             ticker_obj = yf.Ticker(yf_ticker)
-            df = ticker_obj.history(period="3mo", interval="1d", auto_adjust=True)
+            df = ticker_obj.history(period="6mo", interval="1d", auto_adjust=True)
             
-            # If empty, try raw ticker as fallback
+            # Fallback
             if df.empty and yf_ticker != raw_ticker:
-                 df = yf.Ticker(raw_ticker).history(period="3mo", interval="1d", auto_adjust=True)
+                 df = yf.Ticker(raw_ticker).history(period="6mo", interval="1d", auto_adjust=True)
 
-            # Clean and validate
+            # Clean
             df = df.dropna(how='all')
-            if df.empty or len(df) < 15:
+            if df.empty or len(df) < days:
                 continue
 
             # Slice the requested days
@@ -156,30 +161,42 @@ def fetch_imbalance(tickers,
             if 'Close' not in df_slice.columns or 'Open' not in df_slice.columns:
                 continue
             
-            # Pattern Logic
-            is_green = df_slice['Close'] > df_slice['Open']
-            # Wick check: (Open - Low) <= long_wick_size
-            long_wick_ok = (df_slice['Open'] - df_slice['Low']) <= (long_wick_size + 0.00001)
-            valid_green_bars = df_slice[is_green & long_wick_ok]
+            # Unified Logic
+            if candle_color == 'Green':
+                # Green Candle: Close > Open
+                # Wick condition: (Open - Low) <= max_wick
+                is_color = df_slice['Close'] > df_slice['Open']
+                diffs = df_slice['Open'] - df_slice['Low']
+                is_wick_ok = diffs <= (max_wick + 0.00001)
+                
+            else: # Red
+                # Red Candle: Open > Close
+                # Wick condition: (High - Open) <= max_wick
+                is_color = df_slice['Open'] > df_slice['Close']
+                diffs = df_slice['High'] - df_slice['Open']
+                is_wick_ok = diffs <= (max_wick + 0.00001)
+
+            # Filter valid bars
+            valid_bars = df_slice[is_color & is_wick_ok]
+            match_count = len(valid_bars)
             
-            is_red = df_slice['Close'] < df_slice['Open']
-            short_wick_ok = (df_slice['High'] - df_slice['Open']) <= (short_wick_size + 0.00001)
-            valid_red_bars = df_slice[is_red & short_wick_ok]
-            
-            pattern = None
-            if len(valid_green_bars) >= min_green_bars:
-                pattern = "Long"
-            elif len(valid_red_bars) >= min_red_bars:
-                pattern = "Short"
-            
-            if pattern:
+            # Calculate Average Wick Size for the MATCHING bars
+            avg_diff = 0.0
+            if match_count > 0:
+                # We need to re-calculate diffs for only the valid bars
+                # Luckily pandas index alignment handles this if we use the mask
+                valid_diffs = diffs[is_color & is_wick_ok]
+                avg_diff = valid_diffs.mean()
+
+            if match_count >= min_count:
                 results.append({
                     'ticker': raw_ticker,
-                    'type': pattern,
-                    'green_count': len(valid_green_bars),
-                    'red_count': len(valid_red_bars),
+                    'yf_symbol': yf_ticker,
                     'tv_symbol': tv_symbol,
-                    'yf_symbol': yf_symbol
+                    'match_count': match_count,
+                    'avg_diff': round(avg_diff, 4),
+                    'total_days': days,
+                    'target_color': candle_color
                 })
 
         except Exception as e:

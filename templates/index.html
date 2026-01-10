@@ -500,60 +500,83 @@
                                         style="width:100%; padding:0.6rem; background:rgba(0,0,0,0.2); border:1px solid var(--glass-border); border-radius:8px; color:white; font-size:0.9rem;">
                                 </div>
                             </div>
-                        </div>
+                            <!-- UNIFIED CONFIGURATION -->
+                            <div class="card p-4 mb-4" style="border:1px solid var(--border-color);">
+                                <h4
+                                    style="color:var(--text-secondary); margin-bottom:1rem; font-size:0.9rem; text-transform:uppercase; letter-spacing:1px;">
+                                    Analysis Configuration</h4>
 
-                        <!-- Short Pattern Section -->
-                        <div
-                            style="padding:1rem; background:rgba(239,68,68,0.05); border:1px solid rgba(239,68,68,0.2); border-radius:8px;">
-                            <h4 style="margin:0 0 1rem 0; color:var(--error); font-size:0.9rem; font-weight:700;">SHORT
-                                PATTERN</h4>
-                            <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem;">
-                                <div>
-                                    <label
-                                        style="display:block; font-size:0.8rem; color:var(--text-secondary); margin-bottom:0.3rem;">Min
-                                        Red Bars</label>
-                                    <input type="number" id="imbMinRed" value="12" min="1" max="50"
-                                        style="width:100%; padding:0.6rem; background:rgba(0,0,0,0.2); border:1px solid var(--glass-border); border-radius:8px; color:white; font-size:0.9rem;">
-                                </div>
-                                <div>
-                                    <label
-                                        style="display:block; font-size:0.8rem; color:var(--text-secondary); margin-bottom:0.3rem;">Short
-                                        Wick Size (High-Open)</label>
-                                    <input type="number" id="imbShortWick" value="0.05" min="0.01" max="1" step="0.01"
-                                        style="width:100%; padding:0.6rem; background:rgba(0,0,0,0.2); border:1px solid var(--glass-border); border-radius:8px; color:white; font-size:0.9rem;">
+                                <div
+                                    style="display:grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap:1.5rem;">
+
+                                    <!-- Days -->
+                                    <div class="form-group">
+                                        <label>Days to Analyze</label>
+                                        <input type="number" id="imbDays" class="form-control" value="30">
+                                        <small style="color:var(--text-secondary);">Look back period (e.g. last 30 daily
+                                            bars)</small>
+                                    </div>
+
+                                    <!-- Candle Color -->
+                                    <div class="form-group">
+                                        <label>Target Candle Color</label>
+                                        <select id="imbColor" class="form-control"
+                                            style="background:var(--card-bg); color:var(--text-primary); border:1px solid var(--border-color);">
+                                            <option value="Green">Green (Close > Open)</option>
+                                            <option value="Red">Red (Open > Close)</option>
+                                        </select>
+                                        <small style="color:var(--text-secondary);">Which candle type to count?</small>
+                                    </div>
+
+                                    <!-- Min Count -->
+                                    <div class="form-group">
+                                        <label>Min Occurrences</label>
+                                        <input type="number" id="imbMinCount" class="form-control" value="20">
+                                        <small style="color:var(--text-secondary);">Minimum # of matching candles
+                                            required</small>
+                                    </div>
+
+                                    <!-- Max Wick -->
+                                    <div class="form-group">
+                                        <label>Max Wick/Diff Size</label>
+                                        <input type="number" id="imbMaxWick" class="form-control" step="0.01"
+                                            value="0.12">
+                                        <small style="color:var(--text-secondary);">Max allowed diff (Open-Low or
+                                            High-Open)</small>
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     </div>
-                </div>
 
-                <div
-                    style="margin-top:2.5rem; margin-bottom: 2rem; border-top: 1px solid var(--glass-border); padding-top:2rem;">
-                    <label
-                        style="display:block; font-size:0.85rem; font-weight:700; color:var(--text-secondary); text-transform:uppercase; margin-bottom:1rem;">Manual
-                        AI Override</label>
-
-                    <textarea id="imbalanceTickers"
-                        placeholder="Enter tickers to analyze for Long and Short patterns..."
-                        style="width:100%; min-height:120px; padding:1rem; background:rgba(0,0,0,0.2); border:1px solid var(--glass-border); border-radius:8px; color:white; font-family:monospace; font-size:0.9rem; resize:vertical;"></textarea>
-
-                    <button id="analyzeImbalanceBtn" class="btn-primary" onclick="startImbalanceAnalysis()">Identify
-                        Imbalance Patterns</button>
-                </div>
-
-                <!-- Imbalance Progress -->
-                <div id="imbProgressContainer" style="display:none; margin-bottom:2rem;">
-                    <div style="display:flex; justify-content:space-between; margin-bottom:0.8rem; font-size:0.9rem;">
-                        <span id="imbProgressText" style="color:var(--text-secondary)">Analyzing Patterns...</span>
-                        <span id="imbProgressPercent" style="font-weight:800; color:var(--accent-primary)">0%</span>
-                    </div>
                     <div
-                        style="width:100%; height:8px; background:rgba(255,255,255,0.05); border-radius:10px; overflow:hidden;">
-                        <div id="imbProgressFill"
-                            style="width:0%; height:100%; background:linear-gradient(to right, var(--accent-primary), var(--accent-secondary)); transition: width 0.4s ease;">
+                        style="margin-top:2.5rem; margin-bottom: 2rem; border-top: 1px solid var(--glass-border); padding-top:2rem;">
+                        <label
+                            style="display:block; font-size:0.85rem; font-weight:700; color:var(--text-secondary); text-transform:uppercase; margin-bottom:1rem;">Manual
+                            AI Override</label>
+
+                        <textarea id="imbalanceTickers"
+                            placeholder="Enter tickers to analyze for Long and Short patterns..."
+                            style="width:100%; min-height:120px; padding:1rem; background:rgba(0,0,0,0.2); border:1px solid var(--glass-border); border-radius:8px; color:white; font-family:monospace; font-size:0.9rem; resize:vertical;"></textarea>
+
+                        <button id="analyzeImbalanceBtn" class="btn-primary" onclick="startImbalanceAnalysis()">Identify
+                            Imbalance Patterns</button>
+                    </div>
+
+                    <!-- Imbalance Progress -->
+                    <div id="imbProgressContainer" style="display:none; margin-bottom:2rem;">
+                        <div
+                            style="display:flex; justify-content:space-between; margin-bottom:0.8rem; font-size:0.9rem;">
+                            <span id="imbProgressText" style="color:var(--text-secondary)">Analyzing Patterns...</span>
+                            <span id="imbProgressPercent" style="font-weight:800; color:var(--accent-primary)">0%</span>
+                        </div>
+                        <div
+                            style="width:100%; height:8px; background:rgba(255,255,255,0.05); border-radius:10px; overflow:hidden;">
+                            <div id="imbProgressFill"
+                                style="width:0%; height:100%; background:linear-gradient(to right, var(--accent-primary), var(--accent-secondary)); transition: width 0.4s ease;">
+                            </div>
                         </div>
                     </div>
-                </div>
             </section>
 
             <!-- Custom Results Area -->
@@ -605,55 +628,31 @@
                 </div>
             </section>
 
-            <!-- Long Pattern Results Area -->
-            <section id="imbalanceLongResultsCard" class="glass-card" style="display:none;">
-                <div class="results-header">
-                    <h3 class="results-title" style="color:var(--success);">Long Pattern Results</h3>
-                    <div style="display:flex; align-items:center; gap:1.5rem;">
-                        <span id="imbLongMatchCount" class="badge-count">0 Matches</span>
-                        <button class="btn-outline" onclick="copyToClipboard('imbalanceLong')">Copy Symbols</button>
+            <!-- Imbalance Results Area -->
+            <!-- RESULTS CARD -->
+            <div class="card mt-4" id="imbalanceResultsCard" style="display:none;">
+                <div class="card-header" style="display:flex; justify-content:space-between; align-items:center;">
+                    <h3 class="card-title">Analysis Results</h3>
+                    <div>
+                        <span class="badge" id="imbMatchCount">0 Matches</span>
+                        <button class="btn btn-secondary btn-sm" onclick="copyImbalanceTickers()">Copy Symbols</button>
                     </div>
                 </div>
-                <div class="table-responsive">
-                    <table id="imbalanceLongResultsTable">
+                <div class="table-container">
+                    <table class="table" id="imbalanceResultsTable">
                         <thead>
                             <tr>
                                 <th>Ticker</th>
                                 <th>Pattern</th>
-                                <th>Green</th>
-                                <th>Red</th>
-                                <th>Intelligence</th>
+                                <th>Match Count</th>
+                                <th>Avg Diff</th>
+                                <th>Action</th>
                             </tr>
                         </thead>
                         <tbody></tbody>
                     </table>
                 </div>
-            </section>
-
-            <!-- Short Pattern Results Area -->
-            <section id="imbalanceShortResultsCard" class="glass-card" style="display:none;">
-                <div class="results-header">
-                    <h3 class="results-title" style="color:var(--error);">Short Pattern Results</h3>
-                    <div style="display:flex; align-items:center; gap:1.5rem;">
-                        <span id="imbShortMatchCount" class="badge-count">0 Matches</span>
-                        <button class="btn-outline" onclick="copyToClipboard('imbalanceShort')">Copy Symbols</button>
-                    </div>
-                </div>
-                <div class="table-responsive">
-                    <table id="imbalanceShortResultsTable">
-                        <thead>
-                            <tr>
-                                <th>Ticker</th>
-                                <th>Pattern</th>
-                                <th>Green</th>
-                                <th>Red</th>
-                                <th>Intelligence</th>
-                            </tr>
-                        </thead>
-                        <tbody></tbody>
-                    </table>
-                </div>
-            </section>
+            </div>
 
             <!-- No Results Message -->
             <div id="noResults"
@@ -904,29 +903,26 @@
             document.getElementById('analyzeImbalanceBtn').disabled = true;
             document.getElementById('analyzeImbalanceBtn').innerText = "AI Scan Running...";
             document.getElementById('imbProgressContainer').style.display = 'block';
+
+            // Clear Results
             document.getElementById('imbalanceResultsCard').style.display = 'none';
-            document.getElementById('imbalanceShortResultsCard').style.display = 'none';
-            document.getElementById('imbalanceLongResultsCard').style.display = 'none';
-            // FIX: Correctly targeting the two separate tables instead of non-existent generic one
-            if (document.querySelector('#imbalanceLongResultsTable tbody')) document.querySelector('#imbalanceLongResultsTable tbody').innerHTML = '';
-            if (document.querySelector('#imbalanceShortResultsTable tbody')) document.querySelector('#imbalanceShortResultsTable tbody').innerHTML = '';
+            document.querySelector('#imbalanceResultsTable tbody').innerHTML = '';
             document.getElementById('noResults').style.display = 'none';
 
-            // Clear previous results
-            dataStore.imbalanceLong = [];
-            dataStore.imbalanceShort = [];
+            // Clear data store
+            dataStore.imbalanceResults = [];
 
             let completed = 0;
             const total = tickers.length;
-            const BATCH_SIZE = 3; // Small batch size for safety on Vercel
+            const BATCH_SIZE = 3;
 
             updateImbProgress(0, `Initializing scan for ${total} tickers...`);
 
+            // NEW PARAMS
             const days = document.getElementById('imbDays').value;
-            const minGreen = document.getElementById('imbMinGreen').value;
-            const minRed = document.getElementById('imbMinRed').value;
-            const longWick = document.getElementById('imbLongWick').value;
-            const shortWick = document.getElementById('imbShortWick').value;
+            const minCount = document.getElementById('imbMinCount').value;
+            const candleColor = document.getElementById('imbColor').value;
+            const maxWick = document.getElementById('imbMaxWick').value;
 
             try {
                 for (let i = 0; i < total; i += BATCH_SIZE) {
@@ -936,10 +932,9 @@
                     const formData = new FormData();
                     formData.append('tickers', batchStr);
                     formData.append('days', days);
-                    formData.append('min_green_bars', minGreen);
-                    formData.append('min_red_bars', minRed);
-                    formData.append('long_wick_size', longWick);
-                    formData.append('short_wick_size', shortWick);
+                    formData.append('min_count', minCount);
+                    formData.append('candle_color', candleColor);
+                    formData.append('max_wick', maxWick);
 
                     updateImbProgress(Math.round((completed / total) * 100), `Analyzing ${batch.join(', ')}...`);
 
@@ -949,40 +944,24 @@
                     if (data.error) {
                         console.error("Backend Error:", data.error);
                         alert(`Analysis Failed for batch ${batch.join(', ')}:\n${data.error}`);
-                        // Don't stop, try next batch? Or stop? Let's stop to let user see error.
                         throw new Error(data.error);
                     }
 
                     if (data.results && data.results.length > 0) {
-                        // Append results immediately
-                        const longNew = data.results.filter(r => r.type === 'Long');
-                        const shortNew = data.results.filter(r => r.type === 'Short');
-
-                        if (longNew.length > 0) {
-                            dataStore.imbalanceLong = [...(dataStore.imbalanceLong || []), ...longNew];
-                        }
-                        if (shortNew.length > 0) {
-                            dataStore.imbalanceShort = [...(dataStore.imbalanceShort || []), ...shortNew];
-                        }
-
-                        // Re-render all results with accumulated data
-                        // Note: Ideally we'd optimize to just append, but full re-render is safer for sorting
-                        renderImbalanceResults([...(dataStore.imbalanceLong || []), ...(dataStore.imbalanceShort || [])]);
+                        dataStore.imbalanceResults = [...(dataStore.imbalanceResults || []), ...data.results];
+                        renderImbalanceResults(dataStore.imbalanceResults);
                     }
 
                     completed += batch.length;
                     updateImbProgress(Math.round((completed / total) * 100), `Analyzed ${completed}/${total}...`);
 
-                    // Small delay to be nice to the browser event loop
                     await new Promise(r => setTimeout(r, 100));
                 }
 
                 updateImbProgress(100, "Scan Complete");
 
-                // Final check for explicit "No Results"
-                const allResults = [...(dataStore.imbalanceLong || []), ...(dataStore.imbalanceShort || [])];
-                if (allResults.length === 0) {
-                    renderImbalanceResults([]); // Triggers the "No Match" UI
+                if (!dataStore.imbalanceResults || dataStore.imbalanceResults.length === 0) {
+                    renderImbalanceResults([]);
                 }
 
             } catch (e) {
@@ -1003,8 +982,7 @@
 
         function renderImbalanceResults(results) {
             if (!results || results.length === 0) {
-                document.getElementById('imbalanceLongResultsCard').style.display = 'none';
-                document.getElementById('imbalanceShortResultsCard').style.display = 'none';
+                document.getElementById('imbalanceResultsCard').style.display = 'none';
 
                 // Show strict "No Results" message
                 const noRes = document.getElementById('noResults');
@@ -1014,105 +992,62 @@
                         <span style="font-size:2rem;">🔍</span>
                         <h3>No Matches Found</h3>
                         <p style="color:var(--text-secondary)">
-                            The AI scanned all tickers but none matched your strict criteria.<br>
-                            Try reducing <b>Green/Red Bars</b> or increasing <b>Wick Size</b>.
+                            No tickers matched your strict criteria (Min Count, Max Wick).<br>
+                            Try reducing the <b>Min Occurrences</b> or increasing <b>Max Wick</b>.
                         </p>
                     </div>
                 `;
                 return;
             }
 
-            // Split results by pattern type
-            const longResults = results.filter(r => r.type === 'Long');
-            const shortResults = results.filter(r => r.type === 'Short');
+            document.getElementById('imbalanceResultsCard').style.display = 'block';
+            document.getElementById('imbMatchCount').innerText = `${results.length} Matches`;
 
-            // Store in dataStore
-            dataStore.imbalanceLong = longResults;
-            dataStore.imbalanceShort = shortResults;
+            const tbody = document.querySelector('#imbalanceResultsTable tbody');
+            tbody.innerHTML = '';
 
-            // Render Long Pattern Results
-            if (longResults.length > 0) {
-                document.getElementById('imbalanceLongResultsCard').style.display = 'block';
-                document.getElementById('imbLongMatchCount').innerText = `${longResults.length} Matches`;
-                const tbody = document.querySelector('#imbalanceLongResultsTable tbody');
-                tbody.innerHTML = '';
-                longResults.sort((a, b) => a.ticker.localeCompare(b.ticker)).forEach(item => {
-                    const tr = document.createElement('tr');
-                    const tvUrl = `https://www.tradingview.com/chart/?symbol=${item.tv_symbol}`;
+            results.sort((a, b) => a.ticker.localeCompare(b.ticker)).forEach(item => {
+                const tr = document.createElement('tr');
+                const tvUrl = `https://www.tradingview.com/chart/?symbol=${item.tv_symbol}`;
 
-                    const days = item.days || 20;
-                    const lWick = item.long_wick || 0.05;
-                    const sWick = item.short_wick || 0.05;
+                // Style badge based on color
+                const color = item.target_color || 'Green';
+                const badgerStyle = color === 'Green' ?
+                    'background:rgba(16,185,129,0.1); color:var(--success)' :
+                    'background:rgba(239,68,68,0.1); color:var(--error)';
 
-                    const wickInfo = (lWick === sWick) ?
-                        `${lWick} WICK` :
-                        `L:${lWick} S:${sWick} WICK`;
+                const detailStr = `(LAST ${item.days} DAYS | WICK <= ${item.max_wick})`;
 
-                    const detailStr = `(LAST ${days} DAYS ${wickInfo})`;
-
-                    tr.innerHTML = `
-                        <td>
-                            <div style="display:flex; align-items:center;">
-                                <span class="ticker-name">${item.ticker}</span>
-                                ${item.is_new ? '<span class="new-indicator">New</span>' : ''}
-                            </div>
-                            <div style="font-size:0.75rem; color:var(--text-secondary); margin-top:4px;">
-                                ${detailStr}
-                            </div>
-                        </td>
-                        <td><span class="spread-val" style="background:rgba(16,185,129,0.1); color:var(--success)">${item.type}</span></td>
-                        <td>${item.green_count}</td>
-                        <td>${item.red_count}</td>
-                        <td><a href="${tvUrl}" target="_blank" class="tv-btn">View Nodes</a></td>
-                    `;
-                    tbody.appendChild(tr);
-                });
-            } else {
-                document.getElementById('imbalanceLongResultsCard').style.display = 'none';
-            }
-
-            // Render Short Pattern Results
-            if (shortResults.length > 0) {
-                document.getElementById('imbalanceShortResultsCard').style.display = 'block';
-                document.getElementById('imbShortMatchCount').innerText = `${shortResults.length} Matches`;
-                const tbody = document.querySelector('#imbalanceShortResultsTable tbody');
-                tbody.innerHTML = '';
-                shortResults.sort((a, b) => a.ticker.localeCompare(b.ticker)).forEach(item => {
-                    const tr = document.createElement('tr');
-                    const tvUrl = `https://www.tradingview.com/chart/?symbol=${item.tv_symbol}`;
-
-                    const days = item.days || 20;
-                    const lWick = item.long_wick || 0.05;
-                    const sWick = item.short_wick || 0.05;
-
-                    const wickInfo = (lWick === sWick) ?
-                        `${lWick} WICK` :
-                        `L:${lWick} S:${sWick} WICK`;
-
-                    const detailStr = `(LAST ${days} DAYS ${wickInfo})`;
-
-                    tr.innerHTML = `
-                        <td>
-                            <div style="display:flex; align-items:center;">
-                                <span class="ticker-name">${item.ticker}</span>
-                                ${item.is_new ? '<span class="new-indicator">New</span>' : ''}
-                            </div>
-                            <div style="font-size:0.75rem; color:var(--text-secondary); margin-top:4px;">
-                                ${detailStr}
-                            </div>
-                        </td>
-                        <td><span class="spread-val" style="background:rgba(239,68,68,0.1); color:var(--error)">${item.type}</span></td>
-                        <td>${item.green_count}</td>
-                        <td>${item.red_count}</td>
-                        <td><a href="${tvUrl}" target="_blank" class="tv-btn">View Nodes</a></td>
-                    `;
-                    tbody.appendChild(tr);
-                });
-            } else {
-                document.getElementById('imbalanceShortResultsCard').style.display = 'none';
-            }
+                tr.innerHTML = `
+                    <td>
+                        <div style="display:flex; align-items:center;">
+                            <span class="ticker-name">${item.ticker}</span>
+                            ${item.is_new ? '<span class="new-indicator">New</span>' : ''}
+                        </div>
+                        <div style="font-size:0.75rem; color:var(--text-secondary); margin-top:4px;">
+                            ${detailStr}
+                        </div>
+                    </td>
+                    <td><span class="spread-val" style="${badgerStyle}">${color} Candle</span></td>
+                    <td>${item.match_count}</td>
+                    <td>${item.avg_diff}</td>
+                    <td><a href="${tvUrl}" target="_blank" class="tv-btn">View Nodes</a></td>
+                `;
+                tbody.appendChild(tr);
+            });
 
             document.getElementById('noResults').style.display = 'none';
+        }
+
+        function copyImbalanceTickers() {
+            if (!dataStore.imbalanceResults) return;
+            const tickers = dataStore.imbalanceResults.map(r => r.ticker).join(',');
+            navigator.clipboard.writeText(tickers).then(() => {
+                const btn = event.target;
+                const oldText = btn.innerText;
+                btn.innerText = "Copied!";
+                setTimeout(() => btn.innerText = oldText, 2000);
+            });
         }
         function renderResults(type, results) {
             if (!results) return;
