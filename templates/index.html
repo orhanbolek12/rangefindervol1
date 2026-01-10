@@ -12,16 +12,17 @@
         rel="stylesheet">
     <style>
         :root {
-            --bg-dark: #07090e;
+            --bg-dark: #030509;
             --accent-primary: #3b82f6;
             --accent-secondary: #8b5cf6;
-            --glass-bg: rgba(30, 41, 59, 0.7);
-            --glass-border: rgba(255, 255, 255, 0.1);
+            --glass-bg: rgba(15, 23, 42, 0.5);
+            --glass-border: rgba(255, 255, 255, 0.08);
             --text-primary: #f8fafc;
             --text-secondary: #94a3b8;
             --success: #10b981;
             --error: #ef4444;
-            --card-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.8);
+            --card-shadow: 0 20px 50px -12px rgba(0, 0, 0, 0.5);
+            --accent-glow: rgba(59, 130, 246, 0.15);
         }
 
         * {
@@ -573,67 +574,22 @@
                 </div>
             </section>
 
-            <!-- Custom Results Area -->
-            <section id="customResultsCard" class="glass-card" style="display:none;">
+            <!-- Range AI Results Area -->
+            <section id="customResultsCard" class="glass-card" style="display:none; animation: slideUp 0.6s ease-out;">
                 <div class="results-header">
-                    <h3 class="results-title">Analysis Output</h3>
-                    <div style="display:flex; align-items:center; gap:1.5rem;">
-                        <button class="btn-outline" onclick="copyToClipboard('custom')">Copy Symbols</button>
+                    <div>
+                        <h2 class="results-title">Range Stability Output</h2>
+                        <p style="color:var(--text-secondary); font-size:0.85rem; margin-top:0.3rem;">
+                            High-probability stability nodes identified by Range AI filters.
+                        </p>
+                    </div>
+                    <div>
+                        <span class="badge" id="rangeMatchCount">0 Symbols Found</span>
+                        <button class="tv-btn" onclick="copyToClipboard('custom')">Copy Symbols</button>
                     </div>
                 </div>
                 <div class="table-responsive">
                     <table id="customResultsTable">
-                        <thead>
-                            <tr>
-                                <th>Ticker</th>
-                                <th>Low</th>
-                                <th>High</th>
-                                <th>Spread</th>
-                                <th>Intelligence</th>
-                            </tr>
-                        </thead>
-                        <tbody></tbody>
-                    </table>
-                </div>
-            </section>
-
-            <!-- Prefs Results Area -->
-            <section id="prefsResultsCard" class="glass-card" style="display:none;">
-                <div class="results-header">
-                    <h3 class="results-title">Smart Watchlist Matches</h3>
-                    <div style="display:flex; align-items:center; gap:1.5rem;">
-                        <span id="prefsMatchCount" class="badge-count">0 Matches</span>
-                        <button class="btn-outline" onclick="copyToClipboard('prefs')">Copy Symbols</button>
-                    </div>
-                </div>
-                <div class="table-responsive">
-                    <table id="prefsResultsTable">
-                        <thead>
-                            <tr>
-                                <th>Ticker</th>
-                                <th>Low</th>
-                                <th>High</th>
-                                <th>Spread</th>
-                                <th>Intelligence</th>
-                            </tr>
-                        </thead>
-                        <tbody></tbody>
-                    </table>
-                </div>
-            </section>
-
-            <!-- Imbalance Results Area -->
-            <!-- RESULTS CARD -->
-            <div class="card mt-4" id="imbalanceResultsCard" style="display:none;">
-                <div class="card-header" style="display:flex; justify-content:space-between; align-items:center;">
-                    <h3 class="card-title">Analysis Results</h3>
-                    <div>
-                        <span class="badge" id="imbMatchCount">0 Matches</span>
-                        <button class="btn btn-secondary btn-sm" onclick="copyImbalanceTickers()">Copy Symbols</button>
-                    </div>
-                </div>
-                <div class="table-container">
-                    <table class="table" id="imbalanceResultsTable">
                         <thead>
                             <tr>
                                 <th>Ticker</th>
@@ -647,7 +603,68 @@
                         <tbody></tbody>
                     </table>
                 </div>
-            </div>
+            </section>
+
+            <!-- Smart Watchlist Results Area -->
+            <section id="prefsResultsCard" class="glass-card" style="display:none; animation: slideUp 0.6s ease-out;">
+                <div class="results-header">
+                    <div>
+                        <h2 class="results-title">Smart Watchlist Output</h2>
+                        <p style="color:var(--text-secondary); font-size:0.85rem; margin-top:0.3rem;">
+                            Baseline divergence patterns across global smart filters.
+                        </p>
+                    </div>
+                    <div>
+                        <span id="prefsMatchCount" class="badge">0 Symbols Found</span>
+                        <button class="tv-btn" onclick="copyToClipboard('prefs')">Copy Symbols</button>
+                    </div>
+                </div>
+                <div class="table-responsive">
+                    <table id="prefsResultsTable">
+                        <thead>
+                            <tr>
+                                <th>Ticker</th>
+                                <th>Min</th>
+                                <th>Max</th>
+                                <th>Spread</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- Imbalance AI Results Area -->
+            <section id="imbalanceResultsCard" class="glass-card"
+                style="display:none; animation: slideUp 0.6s ease-out;">
+                <div class="results-header">
+                    <div>
+                        <h2 class="results-title">Imbalance Pattern Output</h2>
+                        <p style="color:var(--text-secondary); font-size:0.85rem; margin-top:0.3rem;">
+                            Directional liquidity imbalances detected in recent sessions.
+                        </p>
+                    </div>
+                    <div>
+                        <span id="imbMatchCount" class="badge">0 Symbols Found</span>
+                        <button class="tv-btn" onclick="copyToClipboard('imbalance')">Copy Symbols</button>
+                    </div>
+                </div>
+                <div class="table-responsive">
+                    <table id="imbalanceResultsTable">
+                        <thead>
+                            <tr>
+                                <th>Ticker</th>
+                                <th>Pattern</th>
+                                <th>Match Count</th>
+                                <th>Avg Diff</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </section>
 
             <!-- No Results Message -->
             <div id="noResults"
@@ -1075,10 +1092,10 @@
             }
 
             // Update match count badges
-            const countId = type === 'prefs' ? 'prefsMatchCount' : (type === 'imbalance' ? 'imbMatchCount' : null);
+            const countId = type === 'prefs' ? 'prefsMatchCount' : (type === 'imbalance' ? 'imbMatchCount' : (type === 'custom' ? 'rangeMatchCount' : null));
             if (countId) {
                 const countEl = document.getElementById(countId);
-                if (countEl) countEl.innerText = `${results.length} Matches`;
+                if (countEl) countEl.innerText = `${results.length} Symbols Found`;
             }
 
             // ONLY update DOM if it's the current tab
@@ -1169,6 +1186,11 @@
             document.getElementById('analyzeImbalanceBtn').innerText = "Identify Imbalance Patterns";
         }
     </script>
+
+    <div
+        style="position:fixed; bottom:15px; right:20px; font-family:'Outfit',sans-serif; font-size:0.65rem; color:var(--text-secondary); opacity:0.3; letter-spacing:2px; pointer-events:none; text-transform:uppercase; font-weight:700;">
+        @ORHANWOLDE
+    </div>
 
 </body>
 
