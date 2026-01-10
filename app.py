@@ -245,6 +245,19 @@ def get_prefs():
 def get_imbalance():
     return jsonify(imbalance_cache)
 
+@app.route('/get_tickers', methods=['GET'])
+def get_tickers():
+    try:
+        if os.path.exists('tickers.txt'):
+            with open('tickers.txt', 'r') as f:
+                content = f.read()
+            # Clean and return as comma-separated string
+            tickers = [t.strip() for t in content.replace('\n', ',').split(',') if t.strip()]
+            return jsonify({'tickers': tickers})
+        return jsonify({'tickers': []})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
 @app.route('/refresh_prefs', methods=['POST'])
 def refresh_prefs():
     if prefs_cache['status'] == 'processing':
